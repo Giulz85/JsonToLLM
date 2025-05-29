@@ -1,0 +1,54 @@
+{
+  "credito": "credito residuo di 0.50 euro",
+  "ricariche": [
+    "Ricarica di 10 euro effettuata il 30 aprile 2025 tramite ATM",
+    "Ricarica di 15 euro effettuata il 12 maggio 2025 tramite ATM"
+  ],
+  "offerte_costi_contatori": [
+    {
+      "componente_offerta": "Soglia Spesa Dati : (Configura la tua SIM), attivata in data 2025-04-17, descrizione offerta: La componente abilita la funzionalità di spesa soglia dati all'estero",
+      "costi": [],
+      "contatori": []
+    },
+    {
+      "componente_offerta": "Smart Passport 2.0 : (Configura la tua SIM), attivata in data 2025-04-17, descrizione offerta: Smart Passport 2.0 ti dà 500 Mega, fino a 60 minuti (30 in entrata e 30 in uscita), fino a 30 SMS a 3,99 o 6,99 euro ogni giorno per 24 ore a partire dal primo evento di traffico nei Paesi extra UE e in USA, solo in caso di utilizzo. Per conoscere i dettagli dell'offerta vai su voda.it/roaming",
+      "costi": [],
+      "contatori": []
+    },
+    {
+      "componente_offerta": "Vodafone 25 New : (Piano Base), attivata in data 2025-04-17, descrizione offerta: Chiamate: 25 cent/min + 20 cent alla risposta. SMS: 29 cent Internet: 6 euro per 5GB, poi 2 euro ogni 100MB",
+      "costi": [],
+      "contatori": []
+    },
+    {
+      "componente_offerta": "Vodafone Bronze : (Bundle), attivata in data 2025-04-17, descrizione offerta: Con Vodafone Bronze hai Minuti e SMS illimitati e 50 Giga sulla Rete Vodafone. Segreteria Telefonica, Chiamami e Recall, 414, SMS di ritorno, continuità di servizio e hotspot inclusi.",
+      "costi": [
+        "Costo ricorrente di 4.9 sostenuto in data 2025-03-10 relativo a Vodafone Bronze, metodo di pagamento Borsellino (credito residuo)",
+        "Costo ricorrente di 4.9 sostenuto in data 2025-04-11 relativo a Vodafone Bronze, metodo di pagamento Borsellino (credito residuo)",
+        "Costo ricorrente di 4.9 sostenuto in data 2025-05-10 relativo a Vodafone Bronze, metodo di pagamento Borsellino (credito residuo)"
+      ],
+      "contatori": [
+        {
+          "soglie": [
+            "Contatore Dati - Soglia 50.0 GB - Residuo 50.0 GB"
+          ]
+        }
+      ]
+    },
+    {
+      "componente_offerta": "Avviso Internet Estero : (Configura la tua SIM), attivata in data 2025-04-17, descrizione offerta: Con il servizio Avviso Internet Estero puoi navigare sul tuo cellulare in piena libertà perché sempre aggiornato sul tuo traffico dati all'estero. Infatti, ricevi due SMS di notifica, il primo SMS al raggiungimento di una soglia di spesa giornaliera pari a 200 euro, il secondo al raggiungimento di una soglia di spesa settimanale pari a 600 euro",
+      "costi": [],
+      "contatori": []
+    },
+    {
+      "componente_offerta": "Recall su spento o non raggiungibile : None ---(descrizione non presente)--- , attivata in data 2025-04-17, descrizione offerta: Ricevi un SMS di avviso quando il numero che hai chiamato torna raggiungibile. Servizio incluso nell'offerta e non gestibile.",
+      "costi": [],
+      "contatori": []
+    }
+  ],
+  "costi_extra_bundle": [
+    "Importo one shot di 22.5L'offerta di nome Costo cambio piano telefonico, data di rinnovo: 20250531 pagato con Borsellino (credito residuo) effettuata in data 2025-03-10 direzione inbound",
+    "Importo one shot di 2.37, data di rinnovo: 20250531 pagato con Borsellino (credito residuo) effettuata in data 2025-03-17 direzione inbound",
+    "Importo one shot di 2.37, data di rinnovo: 20250531 pagato con Borsellino (credito residuo) effettuata in data 2025-03-17 direzione inbound"
+  ]
+}

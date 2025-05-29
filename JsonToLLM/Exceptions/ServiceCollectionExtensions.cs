@@ -1,0 +1,28 @@
+﻿using JsonToLLM.Settings;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace JsonToLLM.Exceptions
+{
+    public static class ServiceCollectionExtensions
+    {
+        private const string JsonToLLMSectionName = "JsonToLLM";
+
+        public static IServiceCollection AddJsonToLLM(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.Configure<JsonToLLMSettings>(configuration.GetSection(JsonToLLMSectionName));
+   
+            services.TryAdd(ServiceDescriptor.Transient<IJsonToLLMService, JsonToLLMService>());
+          
+            return services;
+        }
+
+       
+    }
+}
