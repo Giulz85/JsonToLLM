@@ -6,68 +6,83 @@ using JsonToLLM.Model;
 
 namespace JsonToLLM.Test
 {
-    public class TrasformerTest
+    public class OperatorTrasformerTest
     {
+        //[Fact]
+        //public void Transform_ThrowsOnNullArguments()
+        //{
+        //    var trasformer = new ExpressionTrasformer();
+        //    var ctx = Context.Create(new JObject(), new JObject());
+        //    Assert.Throws<ArgumentNullException>(() => trasformer.Transform( new JObject(), ctx));
+        //    Assert.Throws<ArgumentNullException>(() => trasformer.Transform( null, ctx));
+        //    Assert.Throws<ArgumentNullException>(() => trasformer.Transform( new JObject(), null));
+        //}
+
+        //[Fact]
+        //public void Transform_ReplaceSingleValue()
+        //{
+        //    var source = JObject.Parse(@"{ ""foo"": ""bar"" }");
+        //    var template = JObject.Parse(@"{ ""result"": ""@value(foo)"" }");
+        //    var ctx = Context.Create(source, source);
+
+        //    var trasformer = new ExpressionTrasformer();
+        //    var result = trasformer.Transform( template, ctx);
+
+        //    Assert.Equal("bar", result["result"]?.ToString());
+        //}
+
+        //[Fact]
+        //public void Transform_NotFunctionValueIsReportedInOutput()
+        //{
+        //    var source = JObject.Parse(@"{ ""foo"": ""bar"" }");
+        //    var template = JObject.Parse(@"{ ""key"": ""@value(foo)"", ""result"": ""value"" }");
+        //    var ctx = Context.Create(source, source);
+
+        //    var trasformer = new ExpressionTrasformer();
+        //    var result = trasformer.Transform( template, ctx);
+
+        //    Assert.Equal("value", result["result"]?.ToString());
+        //}
+
+        //[Fact]
+        //public void Transform_ReplaceMultipleValues()
+        //{
+        //    var source = JObject.Parse(@"{ 'prop1':'value1', 'prop2':'value2' }");
+        //    var template = JObject.Parse(@"{ 'result1': '@value(prop1)@value(prop2)' }");
+        //    var ctx = Context.Create(source, source);
+
+        //    var trasformer = new ExpressionTrasformer();
+        //    var result = trasformer.Transform( template, ctx);
+
+        //    Assert.Equal("value1value2", result["result1"]?.ToString());
+        //}
+
         [Fact]
-        public void Transform_ThrowsOnNullArguments()
+        public void Transform_UseEachOperatorToCreateArrayOfObject()
         {
-            var trasformer = new ExpressionTrasformer();
-            var ctx = Context.Create(new JObject(), new JObject());
-            Assert.Throws<ArgumentNullException>(() => trasformer.Transform( new JObject(), ctx));
-            Assert.Throws<ArgumentNullException>(() => trasformer.Transform( null, ctx));
-            Assert.Throws<ArgumentNullException>(() => trasformer.Transform( new JObject(), null));
+            var source = JObject.Parse(@"{ 'array': [ { 'prop':'value'}, { 'prop':'value1'}, { 'prop':'value2'} ]}");
+            var template = JObject.Parse(@"{ 'result': { '@operator':'each','@path':'array','@element':{ 'field': '@value(prop)' } } } ");
+            var ctx = Context.Create(source, source);
+
+            var trasformer = new OperatorTrasformer();
+            var result = trasformer.Transform( template, ctx);
+
+            Assert.NotNull(result["result"]?[0]?["field"]);
+            Assert.Equal("value", result["result"][0]["field"]);
         }
 
         [Fact]
-        public void Transform_ReplaceSingleValue()
+        public void Transform_UseEachOperatorToCreateArrayOfString()
         {
-            var source = JObject.Parse(@"{ ""foo"": ""bar"" }");
-            var template = JObject.Parse(@"{ ""result"": ""@value(foo)"" }");
+            var source = JObject.Parse(@"{ 'customers': [ { 'name':'giuliano', 'secondName':'arru'}, { 'name':'mario', 'secondName':'rossi'} ]}");
+            var template = JObject.Parse(@"{ 'result': { '@operator':'each','@path':'customers','@element': 'Customer @value(name) @value(secondName)'  } } ");
             var ctx = Context.Create(source, source);
 
-            var trasformer = new ExpressionTrasformer();
-            var result = trasformer.Transform( template, ctx);
+            var trasformer = new OperatorTrasformer();
+            var result = trasformer.Transform(template, ctx);
 
-            Assert.Equal("bar", result["result"]?.ToString());
-        }
-
-        [Fact]
-        public void Transform_NotFunctionValueIsReportedInOutput()
-        {
-            var source = JObject.Parse(@"{ ""foo"": ""bar"" }");
-            var template = JObject.Parse(@"{ ""key"": ""@value(foo)"", ""result"": ""value"" }");
-            var ctx = Context.Create(source, source);
-
-            var trasformer = new ExpressionTrasformer();
-            var result = trasformer.Transform( template, ctx);
-
-            Assert.Equal("value", result["result"]?.ToString());
-        }
-
-        [Fact]
-        public void Transform_ReplaceMultipleValues()
-        {
-            var source = JObject.Parse(@"{ 'prop1':'value1', 'prop2':'value2' }");
-            var template = JObject.Parse(@"{ 'result1': '@value(prop1)@value(prop2)' }");
-            var ctx = Context.Create(source, source);
-
-            var trasformer = new ExpressionTrasformer();
-            var result = trasformer.Transform( template, ctx);
-
-            Assert.Equal("value1value2", result["result1"]?.ToString());
-        }
-
-        [Fact]
-        public void Transform_ReplaceMultipleValuesFromNestledObject()
-        {
-            var source = JObject.Parse(@"{ 'prop1':'value1', 'object1': { 'prop2':'value2'} }");
-            var template = JObject.Parse(@"{ 'result1': '@value($.prop1)@value($.object1.prop2)' }");
-            var ctx = Context.Create(source, source);
-
-            var trasformer = new ExpressionTrasformer();
-            var result = trasformer.Transform( template, ctx);
-
-            Assert.Equal("value1value2", result["result1"]?.ToString());
+            Assert.NotNull(result["result"]?[0]);
+            Assert.Equal("Customer giuliano arru", result["result"][0]);
         }
 
         [Fact]

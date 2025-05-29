@@ -32,7 +32,7 @@ namespace JsonToLLM
             destination.WalkByCondition(
                 (key,token) =>
                 {
-                    return key.Equals("@each");
+                    return (token.Type == JTokenType.Object && token["@operator"]?.ToString() == "each") ;
                 },
                 (name, path, node) =>
                 {
@@ -45,7 +45,7 @@ namespace JsonToLLM
                     var pathArray = pathEach.ToString() ?? string.Empty;
                   
                     var tokenArray = context.LocalContext.SelectToken(pathArray);
-                    if (tokenArray == null || tokenArray.Type != JTokenType.Null || tokenArray.Type != JTokenType.None)
+                    if (tokenArray == null || tokenArray.Type == JTokenType.Null || tokenArray.Type == JTokenType.None)
                     {
 
                     }
@@ -57,10 +57,12 @@ namespace JsonToLLM
                         foreach (var item in tokenArray.Children())
                         {
                             var contextItem = new Context(context.GlobalContext, item);
-                            expressionTrasformer.Transform(elementEach, contextItem);
+                            var jvalue = expressionTrasformer.Transform(elementEach, contextItem);
+                            newArray.Add(jvalue);
                         }
+                        node.Replace(newArray);
                     }
-                    throw new ArgumentException($"The '@each' operator requires a valid array at path '{pathArray}'.");
+                    //throw new ArgumentException($"The '@each' operator requires a valid array at path '{pathArray}'.");
 
 
 

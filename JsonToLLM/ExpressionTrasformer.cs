@@ -11,7 +11,7 @@ namespace JsonToLLM
 {
     public interface IExpressionTrasformer
     {
-        JObject Transform(JToken template, Context context);
+        JToken Transform(JToken template, Context context);
     }
 
     public class ExpressionTrasformer : IExpressionTrasformer
@@ -30,13 +30,13 @@ namespace JsonToLLM
             // Constructor logic if needed
         }
 
-        public JObject Transform(JToken template, Context context)
+        public JToken Transform(JToken template, Context context)
         {
             if (template == null || context == null)
             {
                 throw new ArgumentNullException("Source or template or context cannot be null.");
             }
-            var destination = (JObject)template.DeepClone();
+            var destination = template.DeepClone();
             destination.WalkByCondition(
                 (key,token) =>
                 {
@@ -55,7 +55,10 @@ namespace JsonToLLM
                         while (ExpressionHelper.IsFunction(newValue));
 
                         // Replace the node value with the new value
-                        node.Replace(JToken.FromObject(newValue));
+                        if(node.Parent == null)
+                            destination = JValue.FromObject(newValue);
+                        else
+                            node.Replace(JToken.FromObject(newValue));
                     }
                 });
 
