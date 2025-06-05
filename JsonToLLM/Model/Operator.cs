@@ -17,7 +17,7 @@ namespace JsonToLLM.Model
         public string Path { get; private set; }
         public JToken Value { get; private set; }
 
-        public IExpressionTrasformer Trasfomer { get; set; }
+        public IExpressionTransformer Trasfomer { get; set; }
         public EachOperator(string path, JToken value, Context context)
         {
             Path = path;

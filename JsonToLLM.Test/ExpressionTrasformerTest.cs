@@ -11,7 +11,7 @@ namespace JsonToLLM.Test
         [Fact]
         public void Transform_ThrowsOnNullArguments()
         {
-            var trasformer = new ExpressionTrasformer();
+            var trasformer = new ExpressionTransformer();
             var ctx = Context.Create(new JObject(), new JObject());
             Assert.Throws<ArgumentNullException>(() => trasformer.Transform( new JObject(), ctx));
             Assert.Throws<ArgumentNullException>(() => trasformer.Transform( null, ctx));
@@ -22,39 +22,42 @@ namespace JsonToLLM.Test
         public void Transform_ReplaceSingleValue()
         {
             var source = JObject.Parse(@"{ ""foo"": ""bar"" }");
-            var template = JObject.Parse(@"{ ""result"": ""@value(foo)"" }");
+            var template = new JValue("@value(foo)");
             var ctx = Context.Create(source, source);
 
-            var trasformer = new ExpressionTrasformer();
-            var result = trasformer.Transform( template, ctx);
+            var trasformer = new ExpressionTransformer();
+            var result = trasformer.Transform( template,  ctx);
 
-            Assert.Equal("bar", result["result"]?.ToString());
+            Assert.Equal("bar", result.Value<string>());
         }
 
         [Fact]
         public void Transform_NotFunctionValueIsReportedInOutput()
         {
+            // Arrange
             var source = JObject.Parse(@"{ ""foo"": ""bar"" }");
-            var template = JObject.Parse(@"{ ""key"": ""@value(foo)"", ""result"": ""value"" }");
+            var template = new JValue("value");
             var ctx = Context.Create(source, source);
 
-            var trasformer = new ExpressionTrasformer();
+            // Act
+            var trasformer = new ExpressionTransformer();
             var result = trasformer.Transform( template, ctx);
 
-            Assert.Equal("value", result["result"]?.ToString());
+            // Assert
+            Assert.Equal("value", result.Value<string>());
         }
 
         [Fact]
         public void Transform_ReplaceMultipleValues()
         {
             var source = JObject.Parse(@"{ 'prop1':'value1', 'prop2':'value2' }");
-            var template = JObject.Parse(@"{ 'result1': '@value(prop1)@value(prop2)' }");
+            var value = new JValue("@value(prop1)@value(prop2)");
             var ctx = Context.Create(source, source);
 
-            var trasformer = new ExpressionTrasformer();
-            var result = trasformer.Transform( template, ctx);
+            var trasformer = new ExpressionTransformer();
+            var result = trasformer.Transform( value, ctx);
 
-            Assert.Equal("value1value2", result["result1"]?.ToString());
+            Assert.Equal("value1value2", result.Value<string>());
         }
 
         [Fact]
@@ -64,10 +67,10 @@ namespace JsonToLLM.Test
             var template = JObject.Parse(@"{ 'result1': '@value($.prop1)@value($.object1.prop2)' }");
             var ctx = Context.Create(source, source);
 
-            var trasformer = new ExpressionTrasformer();
+            var trasformer = new ExpressionTransformer();
             var result = trasformer.Transform( template, ctx);
 
-            Assert.Equal("value1value2", result["result1"]?.ToString());
+            Assert.Equal("value1value2", result.Value<string>());
         }
 
         [Fact]
@@ -77,10 +80,10 @@ namespace JsonToLLM.Test
             var template = JObject.Parse(@"{ 'formatedDate': '@formatdate(@value($.originalDate),dd-MM-yyyy,dd/MM/yyyy)' }");
             var ctx = Context.Create(source, source);
 
-            var trasformer = new ExpressionTrasformer();
+            var trasformer = new ExpressionTransformer();
             var result = trasformer.Transform( template, ctx);
 
-            Assert.Equal("29/05/2025", result["formatedDate"]?.ToString());
+            Assert.Equal("29/05/2025", result.Value<string>());
         }
 
         [Fact]
@@ -90,10 +93,10 @@ namespace JsonToLLM.Test
             var template = JObject.Parse(@"{ 'result1': 'The customer @value($.name) @value($.secondName) lives in @value($.address.city)' }");
             var ctx = Context.Create(source, source);
 
-            var trasformer = new ExpressionTrasformer();
+            var trasformer = new ExpressionTransformer();
             var result = trasformer.Transform( template, ctx);
 
-            Assert.Equal("The customer giuliano arru lives in saronno", result["result1"]?.ToString());
+            Assert.Equal("The customer giuliano arru lives in saronno", result.Value<string>());
         }
 
         [Fact]
@@ -103,10 +106,10 @@ namespace JsonToLLM.Test
             var template = JObject.Parse(@"{ ""result"": ""noFunctionHere"" }");
             var ctx = Context.Create(source, source);
 
-            var trasformer = new ExpressionTrasformer();
+            var trasformer = new ExpressionTransformer();
             var result = trasformer.Transform( template, ctx);
 
-            Assert.Equal("noFunctionHere", result["result"]?.ToString());
+            Assert.Equal("noFunctionHere", result.Value<string>());
         }
 
         [Fact]
@@ -116,10 +119,10 @@ namespace JsonToLLM.Test
             var template = JObject.Parse(@"{ ""result"": ""@value("" }");
             var ctx = Context.Create(source, new JObject());
 
-            var trasformer = new ExpressionTrasformer();
+            var trasformer = new ExpressionTransformer();
             var result =  trasformer.Transform( template, ctx);
 
-            Assert.Equal("@value(", result["result"]?.ToString());
+            Assert.Equal("@value(", result.Value<string>());
         }
 
         [Fact]
@@ -129,7 +132,7 @@ namespace JsonToLLM.Test
             var template = JObject.Parse(@"{ ""result"": ""@value(foo,bar)"" }");
             var ctx = Context.Create(source, new JObject());
 
-            var trasformer = new ExpressionTrasformer();
+            var trasformer = new ExpressionTransformer();
             Assert.Throws<ArgumentException>(() => trasformer.Transform( template, ctx));
         }
 
@@ -140,10 +143,10 @@ namespace JsonToLLM.Test
             var template = JObject.Parse(@"{ ""result"": ""@unknown(1,2)"" }");
             var ctx = Context.Create(source, new JObject());
 
-            var trasformer = new ExpressionTrasformer();
+            var trasformer = new ExpressionTransformer();
             var result = trasformer.Transform( template, ctx);
 
-            Assert.Equal("Function(unknown, 1, 2)", result["result"]?.ToString());
+            Assert.Equal("Function(unknown, 1, 2)", result.Value<string>());
         }
 
         [Fact]
@@ -153,10 +156,10 @@ namespace JsonToLLM.Test
             var template = JObject.Parse(@"{ 'result1': '@value(@value(@value(prop2)))' }");
             var ctx = Context.Create(source, source);
 
-            var trasformer = new ExpressionTrasformer();
+            var trasformer = new ExpressionTransformer();
             var result = trasformer.Transform( template, ctx);
 
-            Assert.Equal("value1", result["result1"]?.ToString());
+            Assert.Equal("value1", result.Value<string>());
         }
     }
 }

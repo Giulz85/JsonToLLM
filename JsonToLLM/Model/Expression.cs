@@ -165,6 +165,63 @@ namespace JsonToLLM.Model
         }
     }
 
+    /// <summary>
+    /// Represents an expression that maps an input value to a predefined output value based on a dictionary.
+    /// </summary>
+    /// <remarks>
+    /// This class uses the provided input string as a key to look up a value in the specified mapping dictionary.
+    /// If the key is found in the dictionary, the corresponding value is returned as a <see cref="JValue"/>.
+    /// If the key is not found, a default value is returned as a <see cref="JValue"/>.
+    /// </remarks>
+    public class SwitchExpression : IExpression
+    {
+        /// <summary>
+        /// Gets the input value used as a key for the mapping.
+        /// </summary>
+        public string Input { get; private set; }
 
+        /// <summary>
+        /// Gets the dictionary that maps input values to output values.
+        /// </summary>
+        public Dictionary<string, JValue> Mapping { get; private set; }
 
+        /// <summary>
+        /// Gets the default value to return if the input value is not found in the mapping.
+        /// </summary>
+        public string Default { get; private set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SwitchExpression"/> class.
+        /// </summary>
+        /// <param name="input">The input value used as a key for the mapping.</param>
+        /// <param name="mapping">The dictionary that maps input values to output values.</param>
+        /// <param name="default">The default value to return if the input value is not found in the mapping.</param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="input"/>, <paramref name="mapping"/>, or <paramref name="default"/> is null.
+        /// </exception>
+        public SwitchExpression(string input, Dictionary<string, JValue> mapping, string @default)
+        {
+            Input = input ?? throw new ArgumentNullException(nameof(input));
+            Mapping = mapping ?? throw new ArgumentNullException(nameof(mapping));
+            Default = @default ?? throw new ArgumentNullException(nameof(@default));
+        }
+
+        /// <summary>
+        /// Uses the input value as a key to look up a value in the mapping dictionary,
+        /// and returns the corresponding value as a <see cref="JValue"/>,
+        /// or the default value as a <see cref="JValue"/> if the key is not found.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="JValue"/> corresponding to the input value, or the default value if the input value is not found in the mapping.
+        /// </returns>
+        public JValue GetValue()
+        {
+            var inputValue = Input.ToString();
+            if (inputValue != null && Mapping.TryGetValue(inputValue, out var mappedValue))
+            {
+                return new JValue(mappedValue);
+            }
+            return new JValue(Default);
+        }
+    }
 }

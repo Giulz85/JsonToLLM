@@ -1,0 +1,134 @@
+{
+  "costdispute": {
+    "balance": {
+      "amount": "167.28 €"
+    },
+    "topups": [
+      {
+        "amount": "10.00 €",
+        "type": "ATM",
+        "date": "2025-05-25"
+      }
+    ],
+    "offers": [
+      {
+        "counters": [
+          {
+            "product": "Avviso Internet Estero",
+            "type": "AddOn",
+            "buckets": [
+              {
+                "type": "UBD Amount",
+                "unit": "Euro",
+                "threshold": "200.0",
+                "remaining": 200.0,
+                "consumed": 0.0
+              },
+              {
+                "type": "UBD Amount",
+                "unit": "Euro",
+                "threshold": "600.0",
+                "remaining": 600.0,
+                "consumed": 0.0
+              }
+            ]
+          }
+        ],
+        "id": "1317887",
+        "longDescription": "/content/dam/digitalexp-next/commerce/catalog/addons/avviso-internet-estero-r07/information-it.html",
+        "name": "Avviso Internet Estero",
+        "shortDescription": "Con il servizio Avviso Internet Estero puoi navigare sul tuo cellulare in piena libertà perché sempre aggiornato sul tuo traffico dati all'estero. Infatti, ricevi due SMS di notifica, il primo SMS al raggiungimento di una soglia di spesa giornaliera pari a 200 euro, il secondo al raggiungimento di una soglia di spesa settimanale pari a 600 euro",
+        "status": "Active"
+      },
+      {
+        "id": "1837787",
+        "longDescription": "/content/dam/digitalexp-next/commerce/catalog/addons/budget-control-data-roaming-r07/information-it.html",
+        "name": "Soglia Spesa Dati",
+        "shortDescription": "La componente abilita la funzionalità di spesa soglia dati all'estero",
+        "status": "Active"
+      },
+      {
+        "id": "4266885",
+        "longDescription": "/content/dam/digitalexp-next/commerce/catalog/plans/vodafone-basic-r07/plan-conditions-it.html",
+        "name": "Vodafone Basic",
+        "shortDescription": "Vodafone Basic: Chiamate: 29 cent/min + 20 cent alla risposta. SMS: 34 cent. Internet: 6,60 euro per 5GB, poi 2 euro ogni 100MB.",
+        "status": "Active"
+      },
+      {
+        "id": "257667895",
+        "name": "Recall su spento o non raggiungibile",
+        "shortDescription": "Ricevi un SMS di avviso quando il numero che hai chiamato torna raggiungibile. Servizio incluso nell'offerta e non gestibile.",
+        "status": "Active"
+      },
+      {
+        "costs": [
+          {
+            "amount": 14.98,
+            "date": "2025-04-20",
+            "offerName": "Smart Passport +",
+            "paymentMethod": "CA",
+            "transactionType": "R"
+          }
+        ],
+        "id": "257665095",
+        "longDescription": "/content/dam/digitalexp-next/commerce/catalog/addons/smart-passport-plus-new-r07/information-it.html",
+        "name": "Smart Passport +",
+        "shortDescription": "Smart Passport + ti dà fino a 60 minuti (30 in entrata e 30 in uscita), 60 SMS e 500 Mega a 3 o 6 euro al giorno nei Paesi extra UE e in USA, solo in caso di utilizzo.",
+        "status": "Active"
+      },
+      {
+        "id": "257798895",
+        "longDescription": "/content/dam/digitalexp-next/commerce/catalog/addons/detariff-smart-passport-technical-addon-r07/information-it.html",
+        "name": "Promo Non pago smartpassport",
+        "shortDescription": "Non utilizzi Smart Passport + per chiamate, SMS e internet nei paesi extra Unione Europea e nel resto del mondo. La tariffazione e' a consumo come previsto dal tuo piano tariffario. Per maggiori dettagli vai su voda.it/estero",
+        "status": "Active"
+      }
+    ],
+    "otherCosts": [
+      {
+        "amount": 12.00,
+        "date": "2025-05-18",
+        "direction": "OUT",
+        "offerName": "Servizio di Telefonia GSM",
+        "roaming": true,
+        "transactionType": "O"
+      },
+      {
+        "amount": 6.69,
+        "date": "2025-04-22",
+        "offerName": "Vodafone Bronze",
+        "paymentMethod": "CA",
+        "transactionType": "R"
+      },
+      {
+        "amount": 50,
+        "date": "2025-04-19",
+        "offerName": "Like Moment",
+        "paymentMethod": "CA",
+        "transactionType": "R"
+      }
+    ],
+    "otherCounters": [
+      {
+        "product": "Vodafone Bronze",
+        "type": "BasePlan",
+        "buckets": [
+          {
+            "type": "Dati",
+            "unit": "GB",
+            "threshold": "50.0",
+            "remaining": 48.11,
+            "consumed": 1.8900000000000006
+          },
+          {
+            "type": "Dati",
+            "unit": "MB",
+            "threshold": "500.0",
+            "remaining": 500.0,
+            "consumed": 0.0
+          }
+        ]
+      }
+    ]
+  }
+}

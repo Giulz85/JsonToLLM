@@ -79,6 +79,17 @@ namespace JsonToLLM.Helpers
                     if (!isEscapedChar) { closebrackettCount++; }
                     else { isEscapedChar = !isEscapedChar; }
                 }
+                //TODO: verify if this is correct for curly brackets
+                if (currentChar == '{')
+                {
+                    if (!isEscapedChar) { openBrackettCount++; }
+                    else { isEscapedChar = !isEscapedChar; }
+                }
+                else if (currentChar == '}')
+                {
+                    if (!isEscapedChar) { closebrackettCount++; }
+                    else { isEscapedChar = !isEscapedChar; }
+                }
 
                 bool brackettOpen = openBrackettCount != closebrackettCount;
                 if (currentChar == ',' && !brackettOpen)

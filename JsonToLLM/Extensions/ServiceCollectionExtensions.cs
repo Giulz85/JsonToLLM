@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JsonToLLM.Exceptions
+namespace JsonToLLM.Extensions
 {
     public static class ServiceCollectionExtensions
     {
@@ -17,8 +17,10 @@ namespace JsonToLLM.Exceptions
         public static IServiceCollection AddJsonToLLM(this IServiceCollection services, IConfiguration configuration)
         {
             services.Configure<JsonToLLMSettings>(configuration.GetSection(JsonToLLMSectionName));
-   
-            services.TryAdd(ServiceDescriptor.Transient<IJsonToLLMService, JsonToLLMService>());
+
+            services.TryAdd(ServiceDescriptor.Transient<IExpressionTransformer, ExpressionTransformer>());
+            services.TryAdd(ServiceDescriptor.Transient<IOperatorTrasformer, OperatorTrasformer>());
+            services.TryAdd(ServiceDescriptor.Transient<IJsonToLLMTrasformer, JsonToLLMTrasformer>());
           
             return services;
         }

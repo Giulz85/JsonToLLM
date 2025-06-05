@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core.Tokenizer;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,7 +12,7 @@ namespace JsonToLLM
 {
     public interface IOperatorTrasformer
     {
-        JObject Transform(JObject template, Context context);
+        JToken Transform(string @operator, JObject operatorTemplate, Context context);
     }
 
     public class OperatorTrasformer : IOperatorTrasformer
@@ -22,53 +23,40 @@ namespace JsonToLLM
             // Constructor logic if needed
         }
 
-        public JObject Transform(JObject template, Context context)
+        public JToken Transform(string @operator, JObject operatorTemplate, Context context)
         {
-            if (template == null || context == null)
+            JToken newToken = JValue.CreateNull(); // Default value if no transformation is applied
+            if (@operator == "each")
             {
-                throw new ArgumentNullException("Source or template or context cannot be null.");
+                var eachObject = (JObject)operatorTemplate;
+                if (!eachObject.TryGetValue("@path", out JToken? pathEach) || pathEach.Type != JTokenType.String)
+                    throw new ArgumentException($"The '@each' operator requires a 'source' property of type string in path '{operatorTemplate.Path}'.");
+                if (!eachObject.TryGetValue("@element", out JToken? elementEach))
+                    throw new ArgumentException($"The '@each' operator requires a '@element' property");
+                var pathArray = pathEach.ToString() ?? string.Empty;
+
+                var tokenArray = context.LocalContext.SelectToken(pathArray);
+                if (tokenArray == null || tokenArray.Type == JTokenType.Null || tokenArray.Type == JTokenType.None)
+                    newToken = new JArray(); // Replace with an empty array if the path does not exist
+                
+                if (tokenArray?.Type == JTokenType.Array)
+                {
+                    var newArray = new JArray();
+                    foreach (var item in tokenArray.Children())
+                    {
+                        var elementEachCloned = elementEach.DeepClone();
+                        elementEachCloned["@context"] = JToken.FromObject(item); // Add context to the elementEach
+                        newArray.Add(elementEachCloned);
+                    }
+                    newToken = newArray;
+                }
+                else
+                {
+                    throw new ArgumentException($"The '@each' operator requires a valid array at path '{pathArray}'. Found type {tokenArray.Type}.");
+                }
             }
-            var destination = (JObject)template.DeepClone();
-            destination.WalkByCondition(
-                (key,token) =>
-                {
-                    return (token.Type == JTokenType.Object && token["@operator"]?.ToString() == "each") ;
-                },
-                (name, path, node) =>
-                {
-                   if( node.Type != JTokenType.Object) throw new ArgumentException(name + " must be an object, found: " + node.Type);
-                    var eachObject = (JObject)node;
-                    if (!eachObject.TryGetValue("@path", out JToken? pathEach) || pathEach.Type != JTokenType.String)
-                        throw new ArgumentException($"The '@each' operator requires a 'source' property of type string in path '{path}'.");
-                    if (!eachObject.TryGetValue("@element", out JToken? elementEach))
-                        throw new ArgumentException($"The '@each' operator requires a '@element' property") ;
-                    var pathArray = pathEach.ToString() ?? string.Empty;
-                  
-                    var tokenArray = context.LocalContext.SelectToken(pathArray);
-                    if (tokenArray == null || tokenArray.Type == JTokenType.Null || tokenArray.Type == JTokenType.None)
-                    {
 
-                    }
-                    else if (tokenArray.Type == JTokenType.Array)
-                    {
-                        var newArray = new JArray();
-
-                        ExpressionTrasformer expressionTrasformer = new ExpressionTrasformer();
-                        foreach (var item in tokenArray.Children())
-                        {
-                            var contextItem = new Context(context.GlobalContext, item);
-                            var jvalue = expressionTrasformer.Transform(elementEach, contextItem);
-                            newArray.Add(jvalue);
-                        }
-                        node.Replace(newArray);
-                    }
-                    //throw new ArgumentException($"The '@each' operator requires a valid array at path '{pathArray}'.");
-
-
-
-                });
-
-            return destination;
+            return newToken;
         }
 
         private string ResolveJsonValue(Context context, string path, string newValue)
