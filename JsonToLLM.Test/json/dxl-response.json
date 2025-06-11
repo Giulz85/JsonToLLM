@@ -1,0 +1,157 @@
+{
+  "Liv1_credito": {
+    "balance": "15.30",
+    "unit": "euro"
+  },
+  "Liv1_ricariche": [
+    {
+      "importo": "15",
+      "unit": "euro",
+      "type": "ATM",
+      "date": "2025-05-10"
+    },
+    {
+      "importo": "10",
+      "unit": "euro",
+      "type": "ATM",
+      "date": "2025-05-15"
+    }
+
+  ],
+  "Liv1_offerte_costi_contatori": [
+    {
+      "componente_offerta": {
+        "name": "Soglia Spesa Dati",
+        "shortDescription": "La componente abilita la funzionalità di spesa soglia dati all'estero",
+        "category": "Configura la tua SIM",
+        "date": "2025-04-17"
+      },
+      "costi": [],
+      "contatori": []
+    },
+    {
+      "componente_offerta": {
+        "name": "Smart Passport 2.0",
+        "shortDescription": "Smart Passport 2.0 ti dà 500 Mega, fino a 60 minuti (30 in entrata e 30 in uscita), fino a 30 SMS a 3,99 o 6,99 euro ogni giorno per 24 ore a partire dal primo evento di traffico nei Paesi extra UE e in USA, solo in caso di utilizzo. Per conoscere i dettagli dell'offerta vai su voda.it/roaming",
+        "category": "Configura la tua SIM",
+        "date": "2025-04-17"
+      },
+      "costi": [],
+      "contatori": []
+    },
+    {
+      "componente_offerta": {
+        "name": "Contoso 25 New",
+        "shortDescription": "Chiamate: 25 cent/min + 20 cent alla risposta. SMS: 29 cent Internet: 6 euro per 5GB, poi 2 euro ogni 100MB",
+        "category": "Piano della Sim",
+        "date": "2025-04-17"
+      },
+      "costi": [],
+      "contatori": []
+    },
+    {
+      "componente_offerta": {
+        "name": "Contoso Bronze",
+        "shortDescription": "Con Contoso Bronze hai Minuti e SMS illimitati e 50 Giga sulla Rete Contoso. Segreteria Telefonica, Chiamami e Recall, 414, SMS di ritorno, continuità di servizio e hotspot inclusi.",
+        "category": "Offerta principale",
+        "date": "2025-04-17"
+      },
+      "costi": [
+        {
+          "offerName": "Contoso Bronze",
+          "transactionType": "R",
+          "offerId": "4266285",
+          "snCodeDesc": "snCodeDesc",
+          "paymentMethod": "PB",
+          "date": "2025-03-10",
+          "direction": "direction",
+          "roaming": "roaming"
+        },
+        {
+          "offerName": "Contoso Bronze",
+          "transactionType": "R",
+          "offerId": "4266285",
+          "snCodeDesc": "snCodeDesc",
+          "paymentMethod": "PB",
+          "date": "2025-04-11",
+          "direction": "direction",
+          "roaming": "roaming"
+        },
+        {
+          "offerName": "Contoso Bronze",
+          "transactionType": "R",
+          "offerId": "4266285",
+          "snCodeDesc": "snCodeDesc",
+          "paymentMethod": "PB",
+          "date": "2025-05-10",
+          "direction": "direction",
+          "roaming": "roaming"
+        }
+      ],
+      "contatori": [
+        {
+          "soglie": [
+            {
+              "label": "Dati",
+              "threshold": 50.0,
+              "unit": "GB",
+              "residualValue": 50.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "componente_offerta": {
+        "name": "Avviso Internet Estero",
+        "shortDescription": "Con il servizio Avviso Internet Estero puoi navigare sul tuo cellulare in piena libertà perché sempre aggiornato sul tuo traffico dati all'estero. Infatti, ricevi due SMS di notifica, il primo SMS al raggiungimento di una soglia di spesa giornaliera pari a 200 euro, il secondo al raggiungimento di una soglia di spesa settimanale pari a 600 euro",
+        "category": "Configura la tua SIM",
+        "date": "2025-04-17"
+      },
+      "costi": [],
+      "contatori": []
+    },
+    {
+      "componente_offerta": {
+        "name": "Recall su spento o non raggiungibile",
+        "shortDescription": "Ricevi un SMS di avviso quando il numero che hai chiamato torna raggiungibile. Servizio incluso nell'offerta e non gestibile.",
+        "category": "category",
+        "date": "2025-04-17"
+      },
+      "costi": [],
+      "contatori": []
+    }
+  ],
+  "Liv1_costi_extra_bundle": [
+    {
+      "offerName": "Costo cambio piano telefonico",
+      "transactionType": "O",
+      "offerId": "259800895",
+      "snCodeDesc": "snCodeDesc",
+      "paymentMethod": "PB",
+      "date": "2025-03-10",
+      "direction": "direction",
+      "roaming": "roaming"
+    },
+    {
+      "offerName": "offerName",
+      "transactionType": "O",
+      "offerId": "offerId",
+      "snCodeDesc": "snCodeDesc",
+      "paymentMethod": "PB",
+      "date": "2025-03-17",
+      "direction": "direction",
+      "roaming": "roaming"
+    },
+    {
+      "offerName": "offerName",
+      "transactionType": "O",
+      "offerId": "offerId",
+      "snCodeDesc": "snCodeDesc",
+      "paymentMethod": "PB",
+      "date": "2025-03-17",
+      "direction": "direction",
+      "roaming": "roaming"
+    }
+  ]
+}

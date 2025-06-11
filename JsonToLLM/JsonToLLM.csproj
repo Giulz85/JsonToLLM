@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
+	<!-- Metadata required -->
+	<PackageId>JsonToLLM</PackageId>
+	<Version>0.0.1</Version>
+	<Authors>Giuliano Arru/</Authors>
+	<Company>arru-dev</Company>
+	<Description>JsonToLLM is a C# library that transforms standard JSON into a format optimized for interpretation by Large Language Models (LLMs), making structured data easier to understand and process in AI workflows.</Description>
+
+	<!-- Metadata suggested -->
+	<PackageTags>nuget; libreria; esempio; tools</PackageTags>
+	<Copyright>Copyright (c) 2025</Copyright>
+	<PackageProjectUrl>https://github.com/Giulz85/JsonToLLM</PackageProjectUrl>
+	<RepositoryUrl>https://github.com/Giulz85/JsonToLLM</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>
+
+	<!-- License -->
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	  
+	  
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Handlebars.Net" Version="2.1.6" />
+    <PackageReference Include="Handlebars.Net.Extension.NewtonsoftJson" Version="1.0.3" />
+    <PackageReference Include="Handlebars.Net.Helpers" Version="2.5.0" />
+    <PackageReference Include="Handlebars.Net.Helpers.DynamicLinq" Version="2.5.0" />
+    <PackageReference Include="Handlebars.Net.Helpers.Json" Version="2.5.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Exceptions\" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,165 @@
+{
+  "costdispute": {
+    "balance": { "amount": "-27.40 \u20AC" },
+    "topups": [
+      {
+        "amount": "22.50 \u20AC",
+        "type": "OTC",
+        "date": "2024-10-17"
+      },
+      {
+        "amount": "4.90 \u20AC",
+        "type": "RC",
+        "date": "2024-10-18"
+      }
+    ],
+    "offers": [
+      {
+        "id": "2195387",
+        "longDescription": "/content/dam/digitalexp-next/commerce/catalog/addons/auto-top-up-r07/information-it.html",
+        "name": "Ricarica Automatica",
+        "shortDescription": "il servizio che ti permette di ricaricare in automatico ogni volta che il tuo credito residuo scende sotto i 5 euro",
+        "status": "Active"
+      },
+      {
+        "id": "1837787",
+        "longDescription": "/content/dam/digitalexp-next/commerce/catalog/addons/budget-control-data-roaming-r07/information-it.html",
+        "name": "Soglia Spesa Dati",
+        "shortDescription": "La componente abilita la funzionalit\u00E0 di spesa soglia dati all\u0027estero",
+        "status": "Active"
+      },
+      {
+        "id": "5472483",
+        "longDescription": "/content/dam/digitalexp-next/commerce/catalog/addons/Contoso-club-giga-r07/information-it.html",
+        "name": "Contoso Club Giga",
+        "shortDescription": "10 Giga aggiuntivi per Contoso Club",
+        "status": "Active",
+        "counters": [
+          {
+            "product": "Contoso Club Giga",
+            "type": "AddOn",
+            "buckets": [
+              {
+                "type": "Contoso Club Giga",
+                "unit": "GB",
+                "threshold": "10.0",
+                "remaining": 10.0,
+                "consumed": 0.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "4761183",
+        "longDescription": "/content/dam/digitalexp-next/commerce/catalog/addons/5g-priority-access-r07/information-it.html",
+        "name": "5G Priority Access",
+        "shortDescription": "Per te l\u0027accesso Prioritario alla Rete mobile, anche in caso di alto traffico",
+        "status": "Ceased"
+      },
+      {
+        "id": "5677683",
+        "longDescription": "/content/dam/digitalexp-next/commerce/catalog/addons/Contoso-club-plus-incluso-r07/information-it.html",
+        "name": "Contoso Club \u002B incluso",
+        "shortDescription": "Con Contoso Club \u002B incluso hai ogni mese un pacchetto di offerte imperdibili, tutta la potenza del 5G e sconti su smartphone.",
+        "status": "Active"
+      },
+      {
+        "id": "5924180",
+        "longDescription": "/content/dam/digitalexp-next/commerce/catalog/addons/smart-passport-2-0-r1/information-it.html",
+        "name": "Smart Passport 2.0",
+        "shortDescription": "Smart Passport 2.0\u00A0ti d\u00E0 500 Mega, fino a 60 minuti (30 in entrata e 30 in uscita), fino a 30 SMS a 3,99 o 6,99 euro al giorno nei Paesi extra UE e in USA, solo in caso di utilizzo. Per conoscere i dettagli dell\u0027offerta vai su voda.it/roaming",
+        "status": "Active"
+      },
+      {
+        "id": "257665095",
+        "longDescription": "/content/dam/digitalexp-next/commerce/catalog/addons/smart-passport-plus-new-r07/information-it.html",
+        "name": "Smart Passport \u002B",
+        "shortDescription": "Smart Passport \u002B ti d\u00E0 fino a 60 minuti (30 in entrata e 30 in uscita), 60 SMS e 500 Mega a 3 o 6 euro al giorno nei Paesi extra UE e in USA, solo in caso di utilizzo.",
+        "status": "Active"
+      },
+      {
+        "id": "1318287",
+        "longDescription": "/content/dam/digitalexp-next/commerce/catalog/plans/red-unlimited-black-r07/plan-conditions-it.html",
+        "name": "Infinito Black Edition",
+        "shortDescription": "Con Infinito Black Edition hai minuti Illimitati, SMS Illimitati e Giga illimitati in 5G a 39,99 euro al mese. In pi\u00F9 hai 1000 minuti verso i Paesi extra UE, 5Giga e 500 minuti per il Roaming. Hotspot, Segreteria Telefonica, Chiamami e Recall, 414, Ricevuta di ritorno SMS e Continuit\u00E0 di servizio sempre inclusi. Per navigare in 5G occorre essere sotto rete 5G Contoso, avere un device ad essa abilitato e una sim da almeno 128k. Se sottoscrivi Infinito Black Edition con addebito su credito residuo paghi 59,99 euro anzich\u00E9 39,99.",
+        "status": "Ceased",
+        "type": "BUNDLE"
+      },
+      {
+        "id": "5149983",
+        "longDescription": "/content/dam/digitalexp-next/commerce/catalog/plans/Contoso-bronze-plus-r07/plan-conditions-it.html",
+        "name": "Contoso Bronze Plus",
+        "shortDescription": "Con Contoso Bronze Plus hai Minuti e SMS illimitati e 70 Giga sulla Rete Contoso. Segreteria Telefonica, Chiamami e Recall, 414, SMS di ritorno, continuit\u00E0 di servizio e hotspot inclusi.",
+        "status": "Active",
+        "type": "BUNDLE",
+        "counters": [
+          {
+            "product": "Contoso Bronze Plus",
+            "type": "BasePlan",
+            "buckets": [
+              {
+                "type": "Dati",
+                "unit": "GB",
+                "threshold": "70.0",
+                "remaining": 70.0,
+                "consumed": 0.0
+              },
+              {
+                "type": "Dati",
+                "unit": "MB",
+                "threshold": "500.0",
+                "remaining": 500.0,
+                "consumed": 0.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "257692695",
+        "name": "Contoso 25 New",
+        "shortDescription": "Chiamate: 25 cent/min \u002B 20 cent alla risposta. SMS: 29 cent Internet: 6 euro per 5GB, poi 2 euro ogni 100MB",
+        "status": "Active",
+        "type": "TARIFF_PLAN"
+      },
+      {
+        "id": "1317887",
+        "longDescription": "/content/dam/digitalexp-next/commerce/catalog/addons/avviso-internet-estero-r07/information-it.html",
+        "name": "Avviso Internet Estero",
+        "shortDescription": "Con il servizio Avviso Internet Estero puoi navigare sul tuo cellulare in piena libert\u00E0 perch\u00E9 sempre aggiornato sul tuo traffico dati all\u0027estero. Infatti, ricevi due SMS di notifica, il primo SMS al raggiungimento di una soglia di spesa giornaliera pari a 200 euro, il secondo al raggiungimento di una soglia di spesa settimanale pari a 600 euro",
+        "status": "Active",
+        "counters": [
+          {
+            "product": "Avviso Internet Estero",
+            "type": "AddOn",
+            "buckets": [
+              {
+                "type": "UBD Amount",
+                "unit": "Euro",
+                "threshold": "200.0",
+                "remaining": 200.0,
+                "consumed": 0.0
+              },
+              {
+                "type": "UBD Amount",
+                "unit": "Euro",
+                "threshold": "600.0",
+                "remaining": 600.0,
+                "consumed": 0.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "257667895",
+        "name": "Recall su spento o non raggiungibile",
+        "shortDescription": "Ricevi un SMS di avviso quando il numero che hai chiamato torna raggiungibile. Servizio incluso nell\u0027offerta e non gestibile.",
+        "status": "Active"
+      }
+    ],
+    "otherCosts": [],
+    "otherCounters": []
+  }
+}
