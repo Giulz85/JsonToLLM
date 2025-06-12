@@ -18,7 +18,7 @@ namespace JsonToLLM.Extensions
         {
             services.Configure<JsonToLLMSettings>(configuration.GetSection(JsonToLLMSectionName));
 
-            services.TryAdd(ServiceDescriptor.Transient<IExpressionTransformer, ExpressionTransformer>());
+            services.TryAdd(ServiceDescriptor.Transient<IExpressionEngine, ExpressionEngine>());
             services.TryAdd(ServiceDescriptor.Transient<IOperatorTrasformer, OperatorTrasformer>());
             services.TryAdd(ServiceDescriptor.Transient<IJsonToLLMTrasformer, JsonToLLMTrasformer>());
           

@@ -5,9 +5,10 @@
   //  "@path": "costdispute.topups",
   //  "@element": "Ricarica di @value(amount) effettuata in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) tramite '@value(type)'"
   //},
+  //[?(@.status=='Active')]
   "offerte_costi_contatori": {
     "@operator": "each",
-    "@path": "costdispute.offers",
+    "@path": "$.costdispute.offers",
     "@element": {
       "componente_offerta": "@value(name): @value(shortDescription), stato '@value(status)'",
       "contatori": {

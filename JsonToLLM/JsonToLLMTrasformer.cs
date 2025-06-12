@@ -6,92 +6,51 @@ namespace JsonToLLM
 {
     public interface IJsonToLLMTrasformer
     {
-        JToken Transform(JToken template, Context context);
+        JToken Transform(JToken template, TemplateContext context);
     }
 
     public class JsonToLLMTrasformer : IJsonToLLMTrasformer
     {
-        private IExpressionTransformer _expressionTrasformer;
+        private IExpressionEngine _expressionEngine;
         private IOperatorTrasformer _operationTranformet;
 
-        public JsonToLLMTrasformer(IExpressionTransformer expressionTrasformer, IOperatorTrasformer operationTranformer)
+        public JsonToLLMTrasformer(IExpressionEngine expressionTrasformer, IOperatorTrasformer operationTranformer)
         {
-            _expressionTrasformer = expressionTrasformer ?? throw new ArgumentNullException(nameof(expressionTrasformer));
+            _expressionEngine = expressionTrasformer ?? throw new ArgumentNullException(nameof(expressionTrasformer));
             _operationTranformet = operationTranformer ?? throw new ArgumentNullException(nameof(operationTranformer));
 
         }
 
-        public JToken Transform(JToken token, Context context)
+        public JToken Transform(JToken token, TemplateContext context)
         {
             if (token == null || context == null)
             {
                 throw new ArgumentNullException("Token or context cannot be null.");
             }
 
-            if (_expressionTrasformer.IsExpression(token))
-            {
-                var newValue = _expressionTrasformer.Transform(token, context);
+            JToken newToken = token;
 
-                // Replace the node value with the new value
-                //if (token.Parent == null)
-                //        return JValue.FromObject(newValue);
-                //else
-                //    token.Replace(JToken.FromObject(newValue));  
-                return newValue;
+            // controlla se è una stringa ed eventulmente valuta expressione
+            if (_expressionEngine.IsExpression(token))
+            {
+                 newToken = _expressionEngine.Evaluate(token, context);              
             }
-            else if (token.Type == JTokenType.Object && ((JObject)token).TryGetValue("@operator", out var operatorToken))
+            else if (token.Type == JTokenType.Object &&  ((JObject)token).TryGetValue("@operator", out var operatorToken))
             {
-                var @operatorName = operatorToken.Value<string>() ?? throw new ArgumentException($"Found invalid type {operatorToken.Type} for @operator at path {operatorToken.Path}");
-
-                //@Each operator
-                if (string.Equals(@operatorName, "each", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    var eachObject = (JObject)token;
-                    if (!eachObject.TryGetValue("@path", out JToken? pathEach) || pathEach.Type != JTokenType.String)
-                        throw new ArgumentException($"The '@each' operator requires a 'source' property of type string in path '{token.Path}'.");
-                    if (!eachObject.TryGetValue("@element", out JToken? elementEach))
-                        throw new ArgumentException($"The '@each' operator requires a '@element' property");
-                    var pathArray = pathEach.ToString() ?? string.Empty;
-
-                    var tokenArray = context.LocalContext.SelectToken(pathArray);
-                    if (tokenArray == null || tokenArray.Type == JTokenType.Null || tokenArray.Type == JTokenType.None)
-                    {
-                        //token.Replace(new JArray()); // Replace with an empty array if the path does not exist
-                        return new JArray(); // Return an empty array directly
-                    }
-                    else if (tokenArray.Type == JTokenType.Array)
-                    {
-                        var newArray = new JArray();
-                        foreach (var item in tokenArray.Children())
-                        {
-                            var contextItem = new Context(context.GlobalContext, item);
-                            var elem = Transform(elementEach.DeepClone(), contextItem);
-                            newArray.Add(elem);
-                        }
-                        // Replace the original token with the new array 
-                        // token.Replace(newArray);
-                        return newArray; // Return the new array directly
-                    }
-                    else
-                    {
-                        throw new ArgumentException($"The '@each' operator requires a valid array at path '{pathArray}'. Found type {tokenArray.Type}.");
-                    }
-                }
-                else
-                {
-                    throw new ArgumentException($"Unsupported operator '{@operatorName}' at path '{token.Path}'.");
-                }
+                //Factory to create the operator component and check if it is a valid operator 
+                var eachNode = token.ToObject<EachOperator>(); // Ensure token is a JObject for further processing
+                var result = eachNode.Evaluate(context);
+                
+                newToken = Transform(result, context); 
             }
-            else if (token.Type == JTokenType.Object && ((JObject)token).TryGetValue("@context", out var elemContext))
+            //temporary node to update a node with a specific context  
+            else if (token.Type == JTokenType.Object && ((JObject)token).TryGetValue("@type", out var type) && 
+                (type.Value<string>() == "context"))
             {
-                var contextObject = (JObject)token;
+                var contextNode = token.ToObject<ContextElement>();
 
-                if (!contextObject.TryGetValue("@element", out JToken? element))
-                    throw new ArgumentException($"The '@each' operator requires a '@element' property");
-
-                Context contextFromElem = Context.Create(context.GlobalContext, elemContext);
-                var newToken = Transform(element, context);
-                return newToken;
+                TemplateContext contextFromElem = TemplateContext.Create(context.GlobalContext, contextNode.Context);
+                newToken = Transform(contextNode.Element, contextFromElem);
 
             }
             else if (token.Type == JTokenType.Object)
@@ -101,6 +60,7 @@ namespace JsonToLLM
                     var newValue = Transform(child.Value, context);
                     child.Value = newValue; // Replace the child value with the transformed value
                 }
+                newToken = token; // Return the modified object
             }
             else if (token.Type == JTokenType.Array)
             {
@@ -108,12 +68,13 @@ namespace JsonToLLM
                 for (var i = 0; i < array.Count; i++)
                 {
                     var elem = array[i];
-                    Context contextElem = new Context(context.GlobalContext, elem);
+                    TemplateContext contextElem = new TemplateContext(context.GlobalContext, elem);
 
                     array[i] = Transform(elem, contextElem);
                 }
+                newToken = array; // Return the modified array
             }
-            return token; // Return the token as is if no transformation is needed
+            return newToken; // Return the token as is if no transformation is needed
         }
     }
 }

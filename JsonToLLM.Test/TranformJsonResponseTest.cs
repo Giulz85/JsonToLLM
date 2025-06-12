@@ -10,7 +10,7 @@ namespace JsonToLLM.Test
     {
 
         // Arrange
-        private IExpressionTransformer _expressionTrasformer = new ExpressionTransformer();
+        private IExpressionEngine _expressionTrasformer = new ExpressionEngine();
         private IOperatorTrasformer _operatorTrasformer = new OperatorTrasformer();
 
         [Fact]
@@ -19,7 +19,7 @@ namespace JsonToLLM.Test
            
             var source = JObject.Parse(File.ReadAllText(@".\json\dxl-response-final.json"));
             var template = JObject.Parse(File.ReadAllText(@".\json\dxl-response-final-template.json"));
-            var ctx = Context.Create(source, source);
+            var ctx = TemplateContext.Create(source, source);
 
             // Act
             var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);

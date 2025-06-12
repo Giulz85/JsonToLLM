@@ -15,7 +15,7 @@ namespace JsonToLLM.Test
         {
             // Arrange
             var json = JObject.Parse(@"{ 'foo': 123 }");
-            var context = Context.Create(json, json);
+            var context = TemplateContext.Create(json, json);
             IExpression expr = new ValueExpression(context, "foo", new JValue(0));
 
             // Act
@@ -30,7 +30,7 @@ namespace JsonToLLM.Test
         {
             // Arrange
             var json = JObject.Parse(@"{ 'foo': 123 }");
-            var context = Context.Create(json, json);
+            var context = TemplateContext.Create(json, json);
             var expr = new ValueExpression(context, "bar", new JValue("default"));
 
             // Act
@@ -47,7 +47,7 @@ namespace JsonToLLM.Test
         public void ValueExpression_ThrowsOnInvalidPath(string path)
         {
             var json = JObject.Parse(@"{ 'foo': 123 }");
-            var context = Context.Create(json, json);
+            var context = TemplateContext.Create(json, json);
 
             Assert.Throws<ArgumentNullException>(() => new ValueExpression(context, path, new JValue(0)));
         }
@@ -62,7 +62,7 @@ namespace JsonToLLM.Test
         public void ValueExpression_ThrowsOnNullDefault()
         {
             var json = JObject.Parse(@"{ 'foo': 123 }");
-            var context = Context.Create(json, json);
+            var context = TemplateContext.Create(json, json);
 
             Assert.Throws<ArgumentNullException>(() => new ValueExpression(context, "foo", null));
         }
@@ -72,7 +72,7 @@ namespace JsonToLLM.Test
         {
             // Arrange
             var json = JObject.Parse(@"{ 'date': '2024-05-27' }");
-            var context = Context.Create(json, json);
+            var context = TemplateContext.Create(json, json);
             var valueExpr = "2024-05-27";
             var formatExpr = new FormatDateExpression(context, valueExpr, "yyyy-MM-dd", "dd/MM/yyyy");
 
@@ -88,7 +88,7 @@ namespace JsonToLLM.Test
         {
             // Arrange
             var json = JObject.Parse(@"{ 'date': 'not-a-date' }");
-            var context = Context.Create(json, json);
+            var context = TemplateContext.Create(json, json);
             var valueExpr = "not-a-date";
             var formatExpr = new FormatDateExpression(context, valueExpr, "yyyy-MM-dd", "dd/MM/yyyy");
 
@@ -111,7 +111,7 @@ namespace JsonToLLM.Test
         {
             var valueExpr = "2024-05-27";
             var json = JObject.Parse(@"{ }");
-            var context = Context.Create(json, json);
+            var context = TemplateContext.Create(json, json);
 
             Assert.Throws<ArgumentNullException>(() => new FormatDateExpression(context, valueExpr, originalFormat, "dd/MM/yyyy"));
         }
@@ -120,7 +120,7 @@ namespace JsonToLLM.Test
         public void FormatDateExpression_ThrowsOnNullExpression()
         {
             var json = JObject.Parse(@"{ }");
-            var context = Context.Create(json, json);
+            var context = TemplateContext.Create(json, json);
 
             Assert.Throws<ArgumentNullException>(() => new FormatDateExpression(context, null, "yyyy-MM-dd", "dd/MM/yyyy"));
         }

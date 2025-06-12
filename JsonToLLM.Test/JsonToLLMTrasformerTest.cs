@@ -10,7 +10,7 @@ namespace JsonToLLM.Test
     {
 
         // Arrange
-        private IExpressionTransformer _expressionTrasformer = new ExpressionTransformer();
+        private IExpressionEngine _expressionTrasformer = new ExpressionEngine();
         private IOperatorTrasformer _operatorTrasformer = new OperatorTrasformer();
 
         [Fact]
@@ -19,7 +19,7 @@ namespace JsonToLLM.Test
            
             var source = JObject.Parse(@"{ ""foo"": ""bar"" }");
             var template = JObject.Parse(@"{ ""result"": ""@value(foo)"" }");
-            var ctx = Context.Create(source, source);
+            var ctx = TemplateContext.Create(source, source);
 
             // Act
             var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);
@@ -37,7 +37,7 @@ namespace JsonToLLM.Test
            
             var source = JObject.Parse(@"{ 'prop1':'value1', 'prop2':'value2' }");
             var template = JObject.Parse(@"{ 'result': '@value(prop1)@value(prop2)' }");
-            var ctx = Context.Create(source, source);
+            var ctx = TemplateContext.Create(source, source);
 
             // Act
             var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);
@@ -53,7 +53,7 @@ namespace JsonToLLM.Test
             // Arrange
             var source = JObject.Parse(@"{ 'prop1':'value1', 'object1': { 'prop2':'value2'} }");
             var template = JObject.Parse(@"{ 'result': '@value($.prop1)@value($.object1.prop2)' }");
-            var ctx = Context.Create(source, source);
+            var ctx = TemplateContext.Create(source, source);
 
             // Act
             var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);
@@ -70,7 +70,7 @@ namespace JsonToLLM.Test
             // Arrange
             var source = JObject.Parse(@"{ 'originalDate':'29-05-2025'}");
             var template = JObject.Parse(@"{ 'formatedDate': '@formatdate(@value($.originalDate),dd-MM-yyyy,dd/MM/yyyy)' }");
-            var ctx = Context.Create(source, source);
+            var ctx = TemplateContext.Create(source, source);
 
             // Act
             var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);
@@ -86,7 +86,7 @@ namespace JsonToLLM.Test
             // Arrange
             var source = JObject.Parse(@"{ 'name':'giuliano', 'secondName':'arru', 'address': { 'city':'saronno'} }");
             var template = JObject.Parse(@"{ 'result1': 'The customer @value($.name) @value($.secondName) lives in @value($.address.city)' }");
-            var ctx = Context.Create(source, source);
+            var ctx = TemplateContext.Create(source, source);
 
             // Act
             var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);
@@ -102,7 +102,7 @@ namespace JsonToLLM.Test
             // Arrange
             var source = JObject.Parse(@"{ ""foo"": ""bar"" }");
             var template = JObject.Parse(@"{ ""result"": ""noFunctionHere"" }");
-            var ctx = Context.Create(source, source);
+            var ctx = TemplateContext.Create(source, source);
 
             // Act
             var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);
@@ -119,7 +119,7 @@ namespace JsonToLLM.Test
             // Arrange
             var source = JObject.Parse(@"{ 'array': [ { 'prop':'value'}, { 'prop':'value1'}, { 'prop':'value2'} ]}");
             var template = JObject.Parse(@"{ 'result': { '@operator':'each','@path':'array','@element':{ 'field': '@value(prop)' } } } ");
-            var ctx = Context.Create(source, source);
+            var ctx = TemplateContext.Create(source, source);
 
             // Act
             var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);
@@ -136,7 +136,7 @@ namespace JsonToLLM.Test
             // Arrange
             var source = JObject.Parse(@"{ 'customers': [ { 'name':'giuliano', 'secondName':'arru'}, { 'name':'mario', 'secondName':'rossi'} ]}");
             var template = JObject.Parse(@"{ 'result': { '@operator':'each','@path':'customers','@element': 'Customer @value(name) @value(secondName)'  } } ");
-            var ctx = Context.Create(source, source);
+            var ctx = TemplateContext.Create(source, source);
 
             // Act
             var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);
@@ -165,7 +165,7 @@ namespace JsonToLLM.Test
                                                                     }
                                                         }
                                                     }");
-            var ctx = Context.Create(source, source);
+            var ctx = TemplateContext.Create(source, source);
 
             // Act
             var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);

@@ -5,38 +5,41 @@ using Newtonsoft.Json.Linq;
 
 namespace JsonToLLM
 {
-    public interface IExpressionTransformer
+    public interface IExpressionEngine
     {
-        JValue Transform(JToken fieldWithExpression, Context context);
+        JToken Evaluate(JToken jtoken, TemplateContext context);
 
         bool IsExpression(JToken token);
     }
 
-    public class ExpressionTransformer : IExpressionTransformer
+    public class ExpressionEngine : IExpressionEngine
     {
-        public ExpressionTransformer()
+        public ExpressionEngine()
         {
             // Constructor logic if needed
         }
 
-        public JValue Transform(JToken fieldWithExpression, Context context)
+        public JToken Evaluate(JToken jtoken, TemplateContext context)
         {
-            if (fieldWithExpression == null)
-                throw new ArgumentNullException(nameof(fieldWithExpression));
+            if (!IsExpression(jtoken))
+                return jtoken;
+
+            if (jtoken == null)
+                throw new ArgumentNullException(nameof(jtoken));
             if(context == null)
                 throw new ArgumentNullException(nameof(context));
 
-            var newValue = fieldWithExpression.Value<string>() ?? throw new ArgumentException($"Field with expression cannot be null or empty in path '{fieldWithExpression.Path}'.");
+            var newValue = jtoken.Value<string>() ?? throw new ArgumentException($"Field with expression cannot be null or empty in path '{jtoken.Path}'.");
             do
             {
-                newValue = ResolveInternalFunction(context, fieldWithExpression.Path, newValue);
+                newValue = ResolveInternalFunction(context, jtoken.Path, newValue);
             }
             while (ExpressionHelper.IsFunction(newValue));
 
             return new JValue(newValue);
         }
 
-        private string ResolveInternalFunction(Context context, string path, string newValue)
+        private string ResolveInternalFunction(TemplateContext context, string path, string newValue)
         {
             if (!ExpressionHelper.TryParseFunctionNameAndArguments(newValue, out string? functionName, out string arguments, out var startIndex, out var endIndex))
                 throw new ArgumentException($"Invalid function format in path '{path}': {newValue}");

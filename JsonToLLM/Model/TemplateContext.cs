@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 
 namespace JsonToLLM.Model
 {
-    public class Context
+    public class TemplateContext
     {
-        public static Context Create(JToken globalContext, JToken localContext) => 
-            new Context(globalContext, localContext);
+        public static TemplateContext Create(JToken globalContext, JToken localContext) => 
+            new TemplateContext(globalContext, localContext);
 
         public JToken GlobalContext { get; private set; }
         public JToken LocalContext { get; private set; }
 
-        public Context(JToken globalContext, JToken localContext)
+        public TemplateContext(JToken globalContext, JToken localContext)
         {
             GlobalContext = globalContext;
             LocalContext = localContext;

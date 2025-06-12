@@ -12,7 +12,7 @@ namespace JsonToLLM
 {
     public interface IOperatorTrasformer
     {
-        JToken Transform(string @operator, JObject operatorTemplate, Context context);
+        JToken Transform(string @operator, JObject operatorTemplate, TemplateContext context);
     }
 
     public class OperatorTrasformer : IOperatorTrasformer
@@ -23,7 +23,7 @@ namespace JsonToLLM
             // Constructor logic if needed
         }
 
-        public JToken Transform(string @operator, JObject operatorTemplate, Context context)
+        public JToken Transform(string @operator, JObject operatorTemplate, TemplateContext context)
         {
             JToken newToken = JValue.CreateNull(); // Default value if no transformation is applied
             if (@operator == "each")
@@ -59,7 +59,7 @@ namespace JsonToLLM
             return newToken;
         }
 
-        private string ResolveJsonValue(Context context, string path, string newValue)
+        private string ResolveJsonValue(TemplateContext context, string path, string newValue)
         {
             if (!ExpressionHelper.TryParseFunctionNameAndArguments(newValue, out string? functionName, out string arguments, out var startIndex, out var endIndex))
                 throw new ArgumentException($"Invalid function format in path '{path}': {newValue}");

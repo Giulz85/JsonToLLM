@@ -44,7 +44,7 @@ namespace JsonToLLM.Model
         /// <summary>
         /// Gets the context containing the local and global JSON tokens.
         /// </summary>
-        public Context Context { get; private set; }
+        public TemplateContext Context { get; private set; }
 
         /// <summary>
         /// Gets the default value to return if the path does not resolve to a value.
@@ -75,7 +75,7 @@ namespace JsonToLLM.Model
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="path"/>, <paramref name="context"/>, or <paramref name="defaultValue"/> is null or empty.
         /// </exception>
-        public ValueExpression(Context context, string path, JValue defaultValue)
+        public ValueExpression(TemplateContext context, string path, JValue defaultValue)
         {
             if (string.IsNullOrWhiteSpace(path)) throw new ArgumentNullException(nameof(path));
             if (context == null) throw new ArgumentNullException(nameof(context));
@@ -110,7 +110,7 @@ namespace JsonToLLM.Model
         /// <summary>
         /// Gets the context containing local and global JSON tokens.
         /// </summary>
-        public Context Context { get; private set; }
+        public TemplateContext Context { get; private set; }
 
         /// <summary>
         /// Date to trasform
@@ -151,7 +151,7 @@ namespace JsonToLLM.Model
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="context"/>, <paramref name="originalFormat"/>, or <paramref name="expression"/> is null or empty.
         /// </exception>
-        public FormatDateExpression(Context context, string date, string originalFormat, string outputFormat)
+        public FormatDateExpression(TemplateContext context, string date, string originalFormat, string outputFormat)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             if (string.IsNullOrWhiteSpace(originalFormat)) throw new ArgumentNullException(nameof(originalFormat));
