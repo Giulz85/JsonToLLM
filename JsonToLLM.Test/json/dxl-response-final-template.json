@@ -16,8 +16,10 @@
   "offerte_costi_contatori": {
     "@operator": "each",
     "@path": "$.costdispute.offers",
+    "@filter": "@.status == 'Active'",
     "@element": {
       "componente_offerta": "@value(name): @value(shortDescription), stato '@value(status)'",
+      "stato": "@value(status)",
       "contatori": {
         "@operator": "each",
         "@path": "counters",

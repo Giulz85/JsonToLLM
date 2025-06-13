@@ -30,19 +30,24 @@ namespace JsonToLLM.Model
         [JsonProperty("@path")]
         public string Path { get; private set; }
 
+        [JsonProperty("@filter")]
+        public string? Filter { get; private set; }
+
         [JsonProperty("@element")]
         public JToken Element { get; private set; }
 
-        public EachOperator(string path, JToken element)
+        public EachOperator(string path,string? filter, JToken element)
         {
             Path = path ?? throw new ArgumentNullException(nameof(path));
             Element = element ?? throw new ArgumentNullException(nameof(element));
+            Filter = filter; // Filter can be null, so no need for ArgumentNullException
         }
 
         public JToken Evaluate(TemplateContext templateContext)
         {
             // has default use the local context
-            var tokenArray = templateContext.LocalContext.SelectToken(Path);
+            var tokenArray = templateContext.LocalContext.SelectTokens(GetJsonPathExpressionWithFilter(Path, Filter));
+
             if (tokenArray == null || tokenArray.Count() == 0)
             {
                 return new JArray(); // Return an empty array directly
@@ -57,8 +62,20 @@ namespace JsonToLLM.Model
                 }
                 return newArray; // Return the new array directly
             }
-
         }
+        private static string GetJsonPathExpressionWithFilter(string path, string? filter)
+        {
+            if (string.IsNullOrEmpty(filter))
+            {
+                return $"{path}[*]"; // No filter, return the path as is
+            }
+            else
+            {
+                // Assuming the filter is a valid JSONPath expression, append it to the path
+                return $"{path}[?({filter})]"; // Example of appending a filter condition
+            }
+        }
+
     }
 
 
