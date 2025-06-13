@@ -8,7 +8,7 @@
 
 	<!-- Metadata required -->
 	<PackageId>JsonToLLM</PackageId>
-	<Version>0.0.1</Version>
+	<Version>1.0.0</Version>
 	<Authors>Giuliano Arru/</Authors>
 	<Company>arru-dev</Company>
 	<Description>JsonToLLM is a C# library that transforms standard JSON into a format optimized for interpretation by Large Language Models (LLMs), making structured data easier to understand and process in AI workflows.</Description>
