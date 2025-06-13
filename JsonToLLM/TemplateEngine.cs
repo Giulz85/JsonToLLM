@@ -1,23 +1,24 @@
-﻿using JsonToLLM.Helpers;
+﻿using JsonToLLM.Extensions;
+using JsonToLLM.Helpers;
 using JsonToLLM.Model;
 using Newtonsoft.Json.Linq;
 
 namespace JsonToLLM
 {
-    public interface IJsonToLLMTrasformer
+    public interface ITemplateEngine
     {
         JToken Transform(JToken template, TemplateContext context);
     }
 
-    public class JsonToLLMTrasformer : IJsonToLLMTrasformer
+    public class TemplateEngine : ITemplateEngine
     {
         private IExpressionEngine _expressionEngine;
-        private IOperatorTrasformer _operationTranformet;
+        private IFactoryOperator _factoryOperator;
 
-        public JsonToLLMTrasformer(IExpressionEngine expressionTrasformer, IOperatorTrasformer operationTranformer)
+        public TemplateEngine(IExpressionEngine expressionTrasformer, IFactoryOperator factoryOperator)
         {
             _expressionEngine = expressionTrasformer ?? throw new ArgumentNullException(nameof(expressionTrasformer));
-            _operationTranformet = operationTranformer ?? throw new ArgumentNullException(nameof(operationTranformer));
+            _factoryOperator = factoryOperator ?? throw new ArgumentNullException(nameof(factoryOperator));
 
         }
 
@@ -30,28 +31,26 @@ namespace JsonToLLM
 
             JToken newToken = token;
 
-            // controlla se è una stringa ed eventulmente valuta expressione
             if (_expressionEngine.IsExpression(token))
             {
                  newToken = _expressionEngine.Evaluate(token, context);              
             }
-            else if (token.Type == JTokenType.Object &&  ((JObject)token).TryGetValue("@operator", out var operatorToken))
+            else if (token.TryToGetSpecificValue<string>("@operator", out var @operator) && @operator != null)
             {
                 //Factory to create the operator component and check if it is a valid operator 
-                var eachNode = token.ToObject<EachOperator>(); // Ensure token is a JObject for further processing
+                var eachNode = _factoryOperator.CreateOperator(@operator, token); 
+
                 var result = eachNode.Evaluate(context);
-                
+                   
                 newToken = Transform(result, context); 
             }
-            //temporary node to update a node with a specific context  
-            else if (token.Type == JTokenType.Object && ((JObject)token).TryGetValue("@type", out var type) && 
-                (type.Value<string>() == "context"))
+            // Temporary node to update a node with a specific context  
+            else if (token.TryToGetSpecificValue<string>("@type", out var @type) && @type == "context")
             {
                 var contextNode = token.ToObject<ContextElement>();
 
                 TemplateContext contextFromElem = TemplateContext.Create(context.GlobalContext, contextNode.Context);
                 newToken = Transform(contextNode.Element, contextFromElem);
-
             }
             else if (token.Type == JTokenType.Object)
             {

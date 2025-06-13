@@ -11,7 +11,7 @@ namespace JsonToLLM.Test
 
         // Arrange
         private IExpressionEngine _expressionTrasformer = new ExpressionEngine();
-        private IOperatorTrasformer _operatorTrasformer = new OperatorTrasformer();
+        private IFactoryOperator _factoryOperator = new FactoryOperator();
 
         [Fact]
         public void Transform_SigleFunction_ResolvesValue()
@@ -22,7 +22,7 @@ namespace JsonToLLM.Test
             var ctx = TemplateContext.Create(source, source);
 
             // Act
-            var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);
+            var transformer = new TemplateEngine(_expressionTrasformer, _factoryOperator);
             var result = transformer.Transform(template, ctx);
 
             // Assert
@@ -40,7 +40,7 @@ namespace JsonToLLM.Test
             var ctx = TemplateContext.Create(source, source);
 
             // Act
-            var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);
+            var transformer = new TemplateEngine(_expressionTrasformer, _factoryOperator);
             var result = transformer.Transform(template, ctx);
 
             // Assert
@@ -56,7 +56,7 @@ namespace JsonToLLM.Test
             var ctx = TemplateContext.Create(source, source);
 
             // Act
-            var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);
+            var transformer = new TemplateEngine(_expressionTrasformer, _factoryOperator);
             var result = transformer.Transform(template, ctx);
 
             // Assert
@@ -73,7 +73,7 @@ namespace JsonToLLM.Test
             var ctx = TemplateContext.Create(source, source);
 
             // Act
-            var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);
+            var transformer = new TemplateEngine(_expressionTrasformer, _factoryOperator);
             var result = transformer.Transform(template, ctx);
 
             // Assert
@@ -89,7 +89,7 @@ namespace JsonToLLM.Test
             var ctx = TemplateContext.Create(source, source);
 
             // Act
-            var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);
+            var transformer = new TemplateEngine(_expressionTrasformer, _factoryOperator);
             var result = transformer.Transform(template, ctx);
 
             // Assert
@@ -105,7 +105,7 @@ namespace JsonToLLM.Test
             var ctx = TemplateContext.Create(source, source);
 
             // Act
-            var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);
+            var transformer = new TemplateEngine(_expressionTrasformer, _factoryOperator);
             var result = transformer.Transform(template, ctx);
 
             // Assert
@@ -122,7 +122,7 @@ namespace JsonToLLM.Test
             var ctx = TemplateContext.Create(source, source);
 
             // Act
-            var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);
+            var transformer = new TemplateEngine(_expressionTrasformer, _factoryOperator);
             var result = transformer.Transform(template, ctx);
 
             // Assert
@@ -139,7 +139,7 @@ namespace JsonToLLM.Test
             var ctx = TemplateContext.Create(source, source);
 
             // Act
-            var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);
+            var transformer = new TemplateEngine(_expressionTrasformer, _factoryOperator);
             var result = transformer.Transform(template, ctx);
 
             // Assert
@@ -168,7 +168,7 @@ namespace JsonToLLM.Test
             var ctx = TemplateContext.Create(source, source);
 
             // Act
-            var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);
+            var transformer = new TemplateEngine(_expressionTrasformer, _factoryOperator);
             var result = transformer.Transform(template, ctx);
 
             // Assert

@@ -20,8 +20,12 @@ namespace JsonToLLM.Extensions
 
             services.TryAdd(ServiceDescriptor.Transient<IExpressionEngine, ExpressionEngine>());
             services.TryAdd(ServiceDescriptor.Transient<IOperatorTrasformer, OperatorTrasformer>());
-            services.TryAdd(ServiceDescriptor.Transient<IJsonToLLMTrasformer, JsonToLLMTrasformer>());
-          
+            services.TryAdd(ServiceDescriptor.Transient<ITemplateEngine, TemplateEngine>());
+            services.TryAdd(ServiceDescriptor.Transient<IFactoryOperator, FactoryOperator>());
+            
+            
+
+
             return services;
         }
 

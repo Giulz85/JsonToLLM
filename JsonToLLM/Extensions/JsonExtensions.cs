@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using System.Linq.Dynamic.Core.Tokenizer;
 
 namespace JsonToLLM.Extensions
 {
@@ -18,6 +19,30 @@ namespace JsonToLLM.Extensions
                    token.Type == JTokenType.String && token.ToString() == string.Empty ||
                    token.Type == JTokenType.Null;
         }
+
+
+
+        /// <summary>
+        /// Try to get a specific value from a JToken by key. Return false if the key does not exist or the value is null.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="token"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static bool TryToGetSpecificValue<T>(this JToken? token, string key, out T? value)
+        {
+            value = default;
+            var ret = false;
+           
+           if(token?.Type == JTokenType.Object)
+            {
+                value = token.Value<T>(key);
+                ret = value is null ? false : true ;
+            }
+            return ret;
+         
+       }
 
     }
 }

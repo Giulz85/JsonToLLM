@@ -21,8 +21,10 @@ namespace JsonToLLM.Test
             var template = JObject.Parse(File.ReadAllText(@".\json\dxl-response-final-template.json"));
             var ctx = TemplateContext.Create(source, source);
 
+            IFactoryOperator factoryOperator = new FactoryOperator();
+
             // Act
-            var transformer = new JsonToLLMTrasformer(_expressionTrasformer, _operatorTrasformer);
+            var transformer = new TemplateEngine(_expressionTrasformer, factoryOperator);
             var result = transformer.Transform(template, ctx)?.ToString();
 
             // Assert

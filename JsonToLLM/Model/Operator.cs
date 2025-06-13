@@ -106,9 +106,9 @@ namespace JsonToLLM.Model
         [JsonProperty("@type")]
         public string Type { get; } = "context"; 
         [JsonProperty("@context")]
-        public JToken? Context { get; set; }
+        public JToken Context { get; set; }
         [JsonProperty("@element")]
-        public JToken? Element { get; set; } // Optional, can be null
+        public JToken Element { get; set; } // Optional, can be null
 
         public ContextElement(JToken? context, JToken element)
         {
