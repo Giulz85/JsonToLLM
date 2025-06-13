@@ -30,7 +30,9 @@ namespace JsonToLLM
             }
             return operatorName switch
             {
-                "each" => operatorTemplate.ToObject<EachOperator>() ?? throw new InvalidOperationException("Failed to create EachOperator from template."),
+                EachOperator.Operator => operatorTemplate.ToObject<EachOperator>() ?? throw new InvalidOperationException("Failed to create EachOperator from template."),
+                SumOperator.Operator => operatorTemplate.ToObject<SumOperator>() ?? throw new InvalidOperationException("Failed to create SumOperator from template."),
+                FloatOperator.Operator => operatorTemplate.ToObject<FloatOperator>() ?? throw new InvalidOperationException("Failed to create FloatOperator from template."),
                 // Add more operators here as needed
                 _ => throw new NotSupportedException($"Operator '{operatorName}' is not supported.")
             };

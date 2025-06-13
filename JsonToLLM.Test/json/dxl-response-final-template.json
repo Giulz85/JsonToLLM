@@ -1,10 +1,17 @@
 {
   "credito": "credito residuo di @value(costdispute.balance.amount)",
-  //"ricariche": {
-  //  "@operator": "each",
-  //  "@path": "costdispute.topups",
-  //  "@element": "Ricarica di @value(amount) effettuata in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) tramite '@value(type)'"
-  //},
+  "ricariche": {
+    "@operator": "each",
+    "@path": "costdispute.topups",
+    "@element": {
+      "description": "Ricarica di @value(amount) effettuata in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) tramite '@value(type)'",
+      "importo": {
+        "@operator": "float",
+        "@path": "amount",
+        "@default": 0.0
+      }
+    }
+  },
   //[?(@.status=='Active')]
   "offerte_costi_contatori": {
     "@operator": "each",
@@ -16,17 +23,29 @@
         "@path": "counters",
         "@element": {
           "descrizione": "Contatore Dati '@value(product)' di tipo '@value(type)'",
+          "sum_remaining": {
+            "@operator": "sum",
+            "@path": "buckets",
+            "@key": "remaining"
+          },
           "soglie": {
             "@operator": "each",
             "@path": "buckets",
-            "@element": "Soglia @value(type) - Residuo @value(remaining) @value(unit) per soglia di @value(threshold)"
+            "@element": {
+              "description": "Soglia @value(type) - Residuo @value(remaining) @value(unit) per soglia di @value(threshold)",
+              "threshold": {
+                "@operator": "float",
+                "@path": "threshold",
+                "@default": 0.0
+              }
+            }
           }
+        },
+        "costi": {
+          "@operator": "each",
+          "@path": "costs",
+          "@element": "Costo ricorrente di @value(amount) sostenuto in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) relativo a @value(offerName), metodo di pagamento @switch(@value(paymentMethod),{'CA':'Carta di credito','BP':'Bollettino postale','IC':'Addebito diretto','RID':'Pagamento bancario','RC':'Ricarica'},'sconosciuto')"
         }
-      },
-      "costi": {
-        "@operator": "each",
-        "@path": "costs",
-        "@element": "Costo ricorrente di @value(amount) sostenuto in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) relativo a @value(offerName), metodo di pagamento @switch(@value(paymentMethod),{'CA':'Carta di credito','BP':'Bollettino postale','IC':'Addebito diretto','RID':'Pagamento bancario','RC':'Ricarica'},'sconosciuto')"
       }
     }
   },

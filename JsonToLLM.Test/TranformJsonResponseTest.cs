@@ -11,7 +11,6 @@ namespace JsonToLLM.Test
 
         // Arrange
         private IExpressionEngine _expressionTrasformer = new ExpressionEngine();
-        private IOperatorTrasformer _operatorTrasformer = new OperatorTrasformer();
 
         [Fact]
         public void Transform_DxlJsonWithComplexTemplate_ResolvesValue()
