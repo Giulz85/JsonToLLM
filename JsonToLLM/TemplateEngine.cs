@@ -33,23 +33,33 @@ namespace JsonToLLM
 
             if (_expressionEngine.IsExpression(token))
             {
-                 newToken = _expressionEngine.Evaluate(token, context);              
+                newToken = _expressionEngine.Evaluate(token, context);
             }
             else if (token.TryToGetSpecificValue<string>("@operator", out var @operator) && @operator != null)
             {
                 //Factory to create the operator component and check if it is a valid operator 
-                var eachNode = _factoryOperator.CreateOperator(@operator, token); 
+                var operatorTemplate = _factoryOperator.CreateOperator(@operator, token);
 
-                var result = eachNode.Evaluate(context);
-                   
-                newToken = Transform(result, context); 
+                var result = operatorTemplate.Evaluate(context);
+
+                // Operator can change context. New context can have node and expression to resolve.
+                if (result.TemplateContext != null)
+                {
+                    var resolvedContext = Transform(result.TemplateContext.LocalContext, context);
+                    context = TemplateContext.Create(context.GlobalContext, resolvedContext);
+                }
+
+                newToken = Transform(result.Json, context);
             }
             // Temporary node to update a node with a specific context  
             else if (token.TryToGetSpecificValue<string>("@type", out var @type) && @type == "context")
             {
                 var contextNode = token.ToObject<ContextElement>();
 
-                TemplateContext contextFromElem = TemplateContext.Create(context.GlobalContext, contextNode.Context);
+                // In context can be inserted operator and expression to resolve.
+                var resolvedContext = Transform(contextNode.Context, context);
+
+                TemplateContext contextFromElem = TemplateContext.Create(context.GlobalContext, resolvedContext);
                 newToken = Transform(contextNode.Element, contextFromElem);
             }
             else if (token.Type == JTokenType.Object)

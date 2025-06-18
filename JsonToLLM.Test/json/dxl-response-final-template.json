@@ -4,11 +4,34 @@
     "@operator": "each",
     "@path": "costdispute.topups",
     "@element": {
-      "description": "Ricarica di @value(amount) effettuata in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) tramite '@value(type)'",
-      "importo": {
-        "@operator": "float",
-        "@path": "amount",
-        "@default": 0.0
+      //"Ricarica di @value(amount) effettuata in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) tramite '@value(type)'"
+      //"description": "Ricarica di @value(amount) effettuata in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) tramite '@value(type)'",
+      //"importo": {
+      //  "@operator": "float",
+      //  "@path": "amount",
+      //  "@default": 0.0
+      //},
+      //"Ricarica di @value(amount) effettuata in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) tramite '@value(type)'"
+      "description_with_new_context": {
+        "@operator": "context",
+        "@context": {
+          "@operator": "objectpatch",
+          "@addIfnull": {
+            "addIfnull": "newProp",
+            "date": "@value(otherDate)"
+          },
+          "@removeKeys": [ "propToRemove" ],
+          "@addOrUpdate": {
+            "addOrUpdateKey": "@value(propToUpdate)",
+            "propToUpdate": "updatedValue"
+          }
+        },
+        "@element": {
+          "description": "Ricarica di @value(amount) effettuata in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) tramite '@value(type)'",
+          "elem": {
+            "@operator": "element"
+          }
+        }
       }
     }
   },
@@ -18,35 +41,46 @@
     "@path": "$.costdispute.offers",
     "@filter": "@.status == 'Active'",
     "@element": {
-      "componente_offerta": "@value(name): @value(shortDescription), stato '@value(status)'",
-      "stato": "@value(status)",
-      "contatori": {
-        "@operator": "each",
-        "@path": "counters",
-        "@element": {
-          "descrizione": "Contatore Dati '@value(product)' di tipo '@value(type)'",
-          "sum_remaining": {
-            "@operator": "sum",
-            "@path": "buckets",
-            "@key": "remaining"
-          },
-          "soglie": {
-            "@operator": "each",
-            "@path": "buckets",
-            "@element": {
-              "description": "Soglia @value(type) - Residuo @value(remaining) @value(unit) per soglia di @value(threshold)",
-              "threshold": {
-                "@operator": "float",
-                "@path": "threshold",
-                "@default": 0.0
+      "@operator": "context",
+      "@context": {
+        "@operator": "objectpatch",
+        "@addIfnull": {
+          "status": "(non presente)",
+          "category": "(non presente)",
+          "type": "(non presente)"
+        }
+      },
+      "@element": {
+        "componente_offerta": "@value(name): @value(shortDescription) con le seguenti caratteristiche: stato '@value(status)', categoria '@value(category)', tipo '@value(type)'",
+        "stato": "@value(status)",
+        "contatori": {
+          "@operator": "each",
+          "@path": "counters",
+          "@element": {
+            "descrizione": "Contatore Dati '@value(product)' di tipo '@value(type)'",
+            "sum_remaining": {
+              "@operator": "sum",
+              "@path": "buckets",
+              "@key": "remaining"
+            },
+            "soglie": {
+              "@operator": "each",
+              "@path": "buckets",
+              "@element": {
+                "description": "Soglia @value(type) - Residuo @value(remaining) @value(unit) per soglia di @value(threshold)",
+                "threshold": {
+                  "@operator": "float",
+                  "@path": "threshold",
+                  "@default": 0.0
+                }
               }
             }
+          },
+          "costi": {
+            "@operator": "each",
+            "@path": "costs",
+            "@element": "Costo ricorrente di @value(amount) sostenuto in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) relativo a @value(offerName), metodo di pagamento @switch(@value(paymentMethod),{'CA':'Carta di credito','BP':'Bollettino postale','IC':'Addebito diretto','RID':'Pagamento bancario','RC':'Ricarica'},'sconosciuto')"
           }
-        },
-        "costi": {
-          "@operator": "each",
-          "@path": "costs",
-          "@element": "Costo ricorrente di @value(amount) sostenuto in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) relativo a @value(offerName), metodo di pagamento @switch(@value(paymentMethod),{'CA':'Carta di credito','BP':'Bollettino postale','IC':'Addebito diretto','RID':'Pagamento bancario','RC':'Ricarica'},'sconosciuto')"
         }
       }
     }

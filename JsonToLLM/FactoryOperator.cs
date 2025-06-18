@@ -33,6 +33,10 @@ namespace JsonToLLM
                 EachOperator.Operator => operatorTemplate.ToObject<EachOperator>() ?? throw new InvalidOperationException("Failed to create EachOperator from template."),
                 SumOperator.Operator => operatorTemplate.ToObject<SumOperator>() ?? throw new InvalidOperationException("Failed to create SumOperator from template."),
                 FloatOperator.Operator => operatorTemplate.ToObject<FloatOperator>() ?? throw new InvalidOperationException("Failed to create FloatOperator from template."),
+                ObjectPatchOperator.Operator => operatorTemplate.ToObject<ObjectPatchOperator>() ?? throw new InvalidOperationException("Failed to create IfNullOperator from template."),
+                ContextOperator.Operator => operatorTemplate.ToObject<ContextOperator>() ?? throw new InvalidOperationException("Failed to create ContextOperator from template."),
+                ElementOperator.Operator => operatorTemplate.ToObject<ElementOperator>() ?? throw new InvalidOperationException("Failed to create ElementOperator from template."),
+
                 // Add more operators here as needed
                 _ => throw new NotSupportedException($"Operator '{operatorName}' is not supported.")
             };
