@@ -55,10 +55,11 @@ namespace JsonToLLM
 
             if (functionName == "value")
             {
-                if (parameters.Count != 1)
-                    throw new ArgumentException($"Function 'value' requires exactly one parameter in path '{path}': {newValue}");
+                if (parameters.Count is < 1 or > 2)
+                    throw new ArgumentException($"Function 'value' requires at least 1 and no more than 2 parameters in path '{path}': {newValue}");
 
-                var expression = new ValueExpression(context, parameters[0], new JValue("null"));
+                var defaultValue = new JValue(parameters.Count > 1 ? parameters[1] : "null");
+                var expression = new ValueExpression(context, parameters[0], defaultValue);
                 var expressionValue = expression.GetValue().ToString() ?? string.Empty;
 
                 // Replace the function call in the string with the evaluated value

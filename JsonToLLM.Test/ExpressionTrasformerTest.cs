@@ -60,6 +60,25 @@ namespace JsonToLLM.Test
             Assert.Equal("value1value2", result.Value<string>());
         }
 
+        [Theory]
+        [InlineData("{ 'prop1':'value1', 'prop2':'value2' }", "@value(prop1)@value(prop2)", "value1value2")] // no defaults, no miss
+        [InlineData("{ 'prop1':'value1', 'prop2':'value2' }", "@value(prop1,default_value1)@value(prop2,default_value2)", "value1value2")] // with default, no miss
+        [InlineData("{ 'prop2':'value2' }", "@value(prop1,default_value1)@value(prop2,default_value2)", "default_value1value2")] // with default, with miss 
+        [InlineData("{}", "@value(prop1,default_value1)@value(prop2,default_value2)", "default_value1default_value2")] // with default, with miss 
+        [InlineData("{}", "@value(prop1)@value(prop2,default_value2)", "nulldefault_value2")] // with default, with miss 
+        [InlineData("{}", "@value(prop1)@value(prop2)", "nullnull")] // no default, with miss 
+        public void Transform_ReplaceMultipleValuesWithDefaultValuesProvided(string sourceStr, string templateStr, string expectedResult)
+        {
+            var source = JObject.Parse(sourceStr);
+            var template = new JValue(templateStr);
+            var ctx = TemplateContext.Create(source, source);
+
+            var transformer = new ExpressionEngine();
+            var result = transformer.Evaluate(template, ctx);
+
+            Assert.Equal(expectedResult, result.Value<string>());
+        }
+
         [Fact]
         public void Transform_ReplaceMultipleValuesFromNestledObject()
         {
