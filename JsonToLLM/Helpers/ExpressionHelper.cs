@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+﻿using System.Text.RegularExpressions;
 
 namespace JsonToLLM.Helpers
 {
@@ -20,7 +15,7 @@ namespace JsonToLLM.Helpers
         /// Regular expression used to match a function name and its arguments.
         /// </summary>
         //private const string FunctionAndArgumentsRegex = @"^\s*@(\w+)\s*\(([^)]*)\)\s*$";
-        private const string FunctionAndArgumentsRegex = @"@(\w+)\s*\(([^()@]*)\)";
+        private const string FunctionAndArgumentsRegex = @"@(\w+)\s*\(\s*((?:`[^`]*`|[^`()@])*)\s*\)";
 
 
         /// <summary>

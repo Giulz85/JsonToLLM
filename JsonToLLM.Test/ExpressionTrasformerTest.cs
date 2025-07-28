@@ -161,5 +161,18 @@ namespace JsonToLLM.Test
 
             Assert.Equal("value1", result.Value<string>());
         }
+
+        [Fact]
+        public void Transform_TemplateContainsIfElseExpression_DetectAndHandle()
+        {
+            var source = JObject.Parse("{ client: {name: 'john'} }");
+            var template = new JValue("Client name: @ifelse(`string.Equals(\"@value(client.name)\",\"null\")`,not-found,@value(client.name))");
+            var ctx = TemplateContext.Create(source, source);
+
+            var transformer = new ExpressionEngine();
+            var result = transformer.Evaluate(template, ctx);
+
+            Assert.Equal("Client name: john", result.Value<string>());
+        }
     }
 }
