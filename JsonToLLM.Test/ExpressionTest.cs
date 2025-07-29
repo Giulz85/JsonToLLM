@@ -130,7 +130,7 @@ namespace JsonToLLM.Test
         [InlineData("var name = \"foo\"; return string.Equals(name, \"bar\");", false)]
         [InlineData("var name = \"foo\"; return string.Equals(name, \"foo\");", true)]
         [InlineData("var number1 = 16; var number2 = 2; return number1%number2 == 0;", true)]
-        public async Task IfElseExpression_ConditionEvaluatesToTrue_ReturnsIfValue(string condition, bool conditionEvaluation)
+        public async Task IfElseExpression_ReturnsValueBasedOnConditionEvaluation(string condition, bool conditionEvaluation)
         {
             // Arrange
             const string ifValue = "if value";
