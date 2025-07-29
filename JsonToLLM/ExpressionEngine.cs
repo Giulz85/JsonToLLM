@@ -50,12 +50,9 @@ namespace JsonToLLM
             for (int i = 0; i < parameters.Count; i++) // Use index-based iteration to modify elements
             {
                 if (IsLiteralString(parameters[i]))
-                {
                     parameters[i] = parameters[i].Trim('`');
-                    continue;
-                }
 
-                if (ExpressionHelper.IsFunction(parameters[i]))
+                while (ExpressionHelper.IsFunction(parameters[i]))
                     parameters[i] = ResolveInternalFunction(context, path, parameters[i]);
             }
 
