@@ -127,6 +127,6 @@ namespace JsonToLLM
         }
 
         public static bool IsLiteralString(string str) 
-            => str.Length > 2 && str[0].Equals('`') && str[^1].Equals('`');
+            => str.Length >= 2 && str[0].Equals('`') && str[^1].Equals('`');
     }
 }
