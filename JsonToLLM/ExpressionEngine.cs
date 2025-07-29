@@ -26,7 +26,7 @@ namespace JsonToLLM
 
             if (jtoken == null)
                 throw new ArgumentNullException(nameof(jtoken));
-            if(context == null)
+            if (context == null)
                 throw new ArgumentNullException(nameof(context));
 
             var newValue = jtoken.Value<string>() ?? throw new ArgumentException($"Field with expression cannot be null or empty in path '{jtoken.Path}'.");
@@ -49,7 +49,10 @@ namespace JsonToLLM
             //Resolve function parameters
             for (int i = 0; i < parameters.Count; i++) // Use index-based iteration to modify elements
             {
-                if (ExpressionHelper.IsFunction(parameters[i]))
+                if (IsLiteralString(parameters[i]))
+                    parameters[i] = parameters[i].Trim('`');
+
+                while (ExpressionHelper.IsFunction(parameters[i]))
                     parameters[i] = ResolveInternalFunction(context, path, parameters[i]);
             }
 
@@ -85,16 +88,30 @@ namespace JsonToLLM
                 var mappingJson = parameters[1];
                 var defaultValue = parameters[2];
 
-                var mapping = JsonConvert.DeserializeObject<Dictionary<string,JValue>>(mappingJson);
-                if(mapping == null)
+                var mapping = JsonConvert.DeserializeObject<Dictionary<string, JValue>>(mappingJson);
+                if (mapping == null)
                     throw new ArgumentException($"Invalid mapping format in path '{path}': {mappingJson}");
 
-                var expression = new SwitchExpression( parameters[0], mapping, parameters[2]);
+                var expression = new SwitchExpression(context, parameters[0], mapping, parameters[2]);
                 var expressionValue = expression.GetValue().ToString() ?? string.Empty;
-                
+
                 var mapped = mapping.TryGetValue(input, out var result) ? result.ToString() : defaultValue;
 
                 newValue = newValue.Substring(0, startIndex.Value) + mapped + newValue.Substring(endIndex.Value + 1);
+            }
+            else if (functionName == "ifelse")
+            {
+                if (parameters.Count != 3)
+                    throw new ArgumentException("Function 'ifelse' requires exactly 3 parameter: condition, ifValue, elseValue.");
+
+                var condition = parameters[0];
+                var ifValue = parameters[1];
+                var elseValue = parameters[2];
+
+                var expression = new IfElseExpression(context, condition, ifValue, elseValue);
+                var expressionValue = expression.GetValue().Value<string>();
+
+                newValue = string.Concat(newValue.AsSpan(0, startIndex!.Value), expressionValue.AsSpan(), newValue.AsSpan(endIndex!.Value + 1));
             }
             else
             {
@@ -108,5 +125,8 @@ namespace JsonToLLM
         {
             return token.Type == JTokenType.String && ExpressionHelper.IsFunction(token.Value<string>() ?? string.Empty);
         }
+
+        public static bool IsLiteralString(string str) 
+            => str.Length >= 2 && str[0].Equals('`') && str[^1].Equals('`');
     }
 }
