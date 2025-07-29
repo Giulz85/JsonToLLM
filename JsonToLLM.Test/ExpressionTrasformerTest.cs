@@ -1,7 +1,4 @@
-﻿using System;
-using Newtonsoft.Json.Linq;
-using Xunit;
-using JsonToLLM;
+﻿using Newtonsoft.Json.Linq;
 using JsonToLLM.Model;
 
 namespace JsonToLLM.Test
@@ -163,16 +160,29 @@ namespace JsonToLLM.Test
         }
 
         [Fact]
-        public void Transform_TemplateContainsIfElseExpression_DetectAndHandle()
+        public void Transform_IfElseExpressionWithFalseCondition_EvaluatesToElseValue()
         {
             var source = JObject.Parse("{ client: {name: 'john'} }");
-            var template = new JValue("Client name: @ifelse(`string.Equals(\"@value(client.name)\",\"null\")`,not-found,@value(client.name))");
+            var template = new JValue("Welcome! @ifelse(`string.Equals(\"@value(client.name)\",\"null\")`,not-found,Client name: @value(client.name))");
             var ctx = TemplateContext.Create(source, source);
 
             var transformer = new ExpressionEngine();
             var result = transformer.Evaluate(template, ctx);
 
-            Assert.Equal("Client name: john", result.Value<string>());
+            Assert.Equal("Welcome! Client name: john", result.Value<string>());
+        }
+
+        [Fact]
+        public void Transform_IfElseExpressionWithTrueCondition_EvaluatesToIfValue()
+        {
+            var source = JObject.Parse("{ client: {} }");
+            var template = new JValue("Welcome!@ifelse(`string.Equals(\"@value(client.name)\",\"null\")`,, Client name: @value(client.name))");
+            var ctx = TemplateContext.Create(source, source);
+
+            var transformer = new ExpressionEngine();
+            var result = transformer.Evaluate(template, ctx);
+
+            Assert.Equal("Welcome!", result.Value<string>());
         }
     }
 }
