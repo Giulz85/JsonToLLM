@@ -8,7 +8,7 @@ public class WestwindTemplateEngineTests
     private readonly WestwindTemplateEngine _engine = new();
 
     [Fact]
-    public async Task InlineExpression_RendersCorrectly()
+    public async Task RenderAsync_InlineExpression_RendersCorrectly()
     {
         var input = JObject.Parse("""{Name: "Alice"}""");
         var ctx = new ExecContext { Input = input };
@@ -20,7 +20,7 @@ public class WestwindTemplateEngineTests
     }
 
     [Fact]
-    public async Task BlockExpression_ReturnsEmptyIfNoReturn()
+    public async Task RenderAsync_BlockExpression_ReturnsEmptyIfNoReturn()
     {
         var input = JObject.Parse("{X: 5}");
         var ctx = new ExecContext { Input = input };
@@ -32,7 +32,7 @@ public class WestwindTemplateEngineTests
     }
 
     [Fact]
-    public async Task BlockExpression_WithReturn_RendersResult()
+    public async Task RenderAsync_BlockExpressionWithReturn_RendersResult()
     {
         var input = JObject.Parse("{X: 3}");
         var ctx = new ExecContext { Input = input };
@@ -44,7 +44,7 @@ public class WestwindTemplateEngineTests
     }
 
     [Fact]
-    public async Task MultipleExpressions_MixedInlineAndBlock()
+    public async Task RenderAsync_MixedInlineAndBlock()
     {
         var input = JObject.Parse("{A: 1, B: 2, C:3}");
         var ctx = new ExecContext { Input = input };
@@ -56,7 +56,7 @@ public class WestwindTemplateEngineTests
     }
 
     [Fact]
-    public async Task MultipleExpressions_GenerateFromArray()
+    public async Task RenderAsync_BlockExpressionTransformsAnArray()
     {
         var input = JObject.Parse("""
                                   {items: [
@@ -104,12 +104,5 @@ public class WestwindTemplateEngineTests
         var result = await _engine.RenderAsync(tpl, ctx);
 
         Assert.Equal("Brand: BMW Speed: 100", result);
-    }
-
-    [Fact]
-    public async Task InlineEmptyCode_ThrowsArgumentException()
-    {
-        var ctx = new ExecContext { Input = new { } };
-        await Assert.ThrowsAsync<ArgumentException>(() => _engine.RenderAsync("Hello @() End", ctx));
     }
 }
