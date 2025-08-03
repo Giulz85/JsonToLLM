@@ -1,14 +1,14 @@
-﻿using JsonToLLM.Westwind;
+﻿using JsonToLLM.CSharpScripting;
 
 namespace JsonToLLM.Test;
 
-public class ExpressionParserTests
+public class RoslynTemplateParserTests
 {
     [Fact]
     public void ParsesSimpleInlineExpression()
     {
         const string tpl = "Hello @(Name)";
-        var matches = ExpressionParser.Parse(tpl);
+        var matches = RoslynTemplateParse.Parse(tpl);
         Assert.Single(matches);
 
         var m = matches[0];
@@ -22,7 +22,7 @@ public class ExpressionParserTests
     public void ParsesSimpleBlockExpression()
     {
         const string tpl = "Start @{ var x = 1; } End";
-        var matches = ExpressionParser.Parse(tpl);
+        var matches = RoslynTemplateParse.Parse(tpl);
         Assert.Single(matches);
 
         var m = matches[0];
@@ -34,7 +34,7 @@ public class ExpressionParserTests
     public void ParsesNestedParenthesesInInline()
     {
         const string tpl = "Value @(Func(\"test(1)\")) done.";
-        var matches = ExpressionParser.Parse(tpl);
+        var matches = RoslynTemplateParse.Parse(tpl);
         Assert.Single(matches);
 
         var m = matches[0];
@@ -46,7 +46,7 @@ public class ExpressionParserTests
     public void ParsesNestedBracesAndVarsInBlock()
     {
         const string tpl = "@{ var json = \"{ \"key\": 123 }\"; } tail";
-        var matches = ExpressionParser.Parse(tpl);
+        var matches = RoslynTemplateParse.Parse(tpl);
         Assert.Single(matches);
 
         var m = matches[0];
@@ -63,7 +63,7 @@ public class ExpressionParserTests
                            
                            Goodbye @(C)
                            """;
-        var matches = ExpressionParser.Parse(tpl);
+        var matches = RoslynTemplateParse.Parse(tpl);
         Assert.Equal(3, matches.Count);
 
         Assert.Equal("A", matches[0].Code.Trim());
@@ -75,7 +75,7 @@ public class ExpressionParserTests
     public void ThrowsWhenInlineMissingClosingParen()
     {
         const string tpl = "Missing @(Unfinished";
-        var ex = Assert.Throws<InvalidOperationException>(() => ExpressionParser.Parse(tpl));
+        var ex = Assert.Throws<InvalidOperationException>(() => RoslynTemplateParse.Parse(tpl));
         Assert.Contains("Unterminated expression", ex.Message);
     }
 
@@ -83,7 +83,7 @@ public class ExpressionParserTests
     public void ThrowsWhenBlockMissingClosingBrace()
     {
         const string tpl = "Missing @{ var x = 1;";
-        var ex = Assert.Throws<InvalidOperationException>(() => ExpressionParser.Parse(tpl));
+        var ex = Assert.Throws<InvalidOperationException>(() => RoslynTemplateParse.Parse(tpl));
         Assert.Contains("Unterminated expression", ex.Message);
     }
 }

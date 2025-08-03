@@ -32,10 +32,10 @@
     <PackageReference Include="Handlebars.Net.Helpers" Version="2.5.0" />
     <PackageReference Include="Handlebars.Net.Helpers.DynamicLinq" Version="2.5.0" />
     <PackageReference Include="Handlebars.Net.Helpers.Json" Version="2.5.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.5" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.5" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.5" />
-    <PackageReference Include="Westwind.Scripting" Version="1.7.0" />
   </ItemGroup>
 
   <ItemGroup>
