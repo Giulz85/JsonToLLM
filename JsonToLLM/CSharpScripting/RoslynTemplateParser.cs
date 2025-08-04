@@ -1,7 +1,7 @@
 ﻿
 namespace JsonToLLM.CSharpScripting;
 
-public class RoslynTemplateParse
+public class RoslynTemplateParser
 {
     public class ExpressionMatch
     {

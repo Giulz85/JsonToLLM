@@ -15,7 +15,7 @@ public class RoslynTemplateEngine(RoslynExecutor roslynExecutor) : ITemplateEngi
         var current = 0;
         var sb = new StringBuilder();
 
-        var matches = RoslynTemplateParse.Parse(template);
+        var matches = RoslynTemplateParser.Parse(template);
 
         foreach (var m in matches)
         {
