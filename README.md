@@ -1,211 +1,222 @@
-# JsonToLLM  
-Convert structured JSON data into an LLM-friendly format
+# JsonToLLM
 
-## 📘 Overview  
-**JsonToLLM** is a lightweight C# library that transforms traditional JSON structures into text or simplified JSON formats easier for **Large Language Models (LLMs)** to understand.  
+**JsonToLLM** is a lightweight and flexible .NET library designed to transform JSON structures into formats suitable for Generative AI (GenAI) applications.
+Often, APIs are not originally designed with GenAI in mind — they expose data in complex, verbose formats, include technical fields irrelevant for language models, or use naming conventions that are not natural or conversational.
 
-It bridges the gap between structured data and natural language, making it ideal for integrating backend systems with AI models that need to reason over structured information.
+**JsonToLLM** provides a simple and declarative way to reshape these API responses into **LLM-friendly formats**, using a template syntax that makes transformations readable, maintainable, and transparent.
 
----
+With JsonToLLM, you can:
 
-## ✨ Key Features  
-- 🧩 Converts JSON into readable, LLM-optimized formats  
-- ⚙️ Compatible with **.NET 6+** and **.NET 8**  
-- 🧠 Template-based transformation system for flexible customization  
-- 🪶 Minimal dependencies (only `Newtonsoft.Json`)  
-- 🔄 Ideal for AI pipelines, data-to-text generation, and prompt construction  
+* Remove unnecessary or verbose data fields
+* Rename fields to natural, descriptive names
+* Flatten nested JSON structures
+* Reformat and localize values (dates, units, etc.)
+* Build readable data structures that LLMs can easily understand
 
 ---
 
-## 🚀 Why JsonToLLM  
-Raw JSON can be difficult for LLMs to interpret.  
-JsonToLLM restructures and simplifies JSON data so that models like GPT can focus on key information and reasoning rather than syntax.
+## 🚀 Features
 
-Typical use cases include:
-- Converting backend or API data into LLM-readable text  
-- Preparing structured input for generative AI workflows  
-- Building clear and consistent prompt structures  
+* Transform JSON using a declarative template syntax
+* Support for embedded expressions like `@value(path)` and `@formatdate()`
+* Powerful iteration through `@operator: each`
+* Works with nested objects and arrays
+* Easily extensible through a clean architecture (`IExpressionEngine`, `IFactoryOperator`)
 
 ---
 
-## 📦 Installation  
-Install from NuGet:
+## 🧹 Installation
 
 ```bash
 dotnet add package JsonToLLM
 ```
 
-Or add the source to your project and import the namespace:
-
-```csharp
-using JsonToLLM;
-```
+or include the project in your solution and reference it directly.
 
 ---
 
-## 🧠 Basic Usage
+## ⚙️ Usage
+
+### Basic transformation
 
 ```csharp
-using JsonToLLM;
 using Newtonsoft.Json.Linq;
+using JsonToLLM;
+using JsonToLLM.Model;
 
-string json = @"{
-  'user': {
-    'name': 'Alice',
-    'age': 31,
-    'subscriptions': ['Internet', 'TV']
-  }
-}";
+// Create source and template
+var source = JObject.Parse(@"{ \"foo\": \"bar\" }");
+var template = JObject.Parse(@"{ \"result\": \"@value(foo)\" }");
 
-// Parse JSON
-var token = JToken.Parse(json);
+// Create context
+var ctx = TemplateContext.Create(source, source);
 
-// Convert to an LLM-friendly text format
-var llmText = JsonToLLMConverter.Convert(token);
+// Transform
+var transformer = new TemplateEngine(new ExpressionEngine(), new FactoryOperator());
+var result = transformer.Transform(template, ctx);
 
-Console.WriteLine(llmText);
-```
-
-### 🧾 Output Example
-```
-User:
-- Name: Alice
-- Age: 31
-- Subscriptions: Internet, TV
+// Output: { "result": "bar" }
 ```
 
 ---
 
-## 🧩 Advanced Examples
-
-### Example 1 – Including nested objects
-```csharp
-string json = @"{
-  'order': {
-    'id': 1234,
-    'customer': { 'name': 'John Doe', 'email': 'john@doe.com' },
-    'items': [
-      { 'product': 'Laptop', 'price': 999.99 },
-      { 'product': 'Mouse', 'price': 25.50 }
-    ],
-    'status': 'Delivered'
-  }
-}";
-
-var llmText = JsonToLLMConverter.Convert(JToken.Parse(json));
-
-Console.WriteLine(llmText);
-```
-
-**Output:**
-```
-Order:
-- Id: 1234
-- Customer:
-  - Name: John Doe
-  - Email: john@doe.com
-- Items:
-  - Product: Laptop
-    Price: 999.99
-  - Product: Mouse
-    Price: 25.50
-- Status: Delivered
-```
-
----
-
-### Example 2 – Simplified JSON output
-```csharp
-var options = new JsonToLLMOptions
-{
-    Mode = OutputMode.Json, // produce simplified JSON instead of text
-    Indent = true
-};
-
-var llmJson = JsonToLLMConverter.Convert(JToken.Parse(json), options);
-
-Console.WriteLine(llmJson);
-```
-
-**Output:**
-```json
-{
-  "order": {
-    "id": 1234,
-    "customer": "John Doe",
-    "items": ["Laptop", "Mouse"],
-    "status": "Delivered"
-  }
-}
-```
-
----
-
-### Example 3 – Real-world scenario  
-Suppose your backend returns a user profile and account summary, and you want to give an LLM a readable representation:
+### Combine multiple values
 
 ```csharp
-var userData = @"{
-  'name': 'Marco Rossi',
-  'balance': 24.8,
-  'last_topup': '2025-10-05',
-  'offers': [
-    { 'name': 'Giga Unlimited', 'price': 9.99 },
-    { 'name': 'Voice Premium', 'price': 5.00 }
-  ]
-}";
+var source = JObject.Parse(@"{ 'prop1':'value1', 'prop2':'value2' }");
+var template = JObject.Parse(@"{ 'result': '@value(prop1)@value(prop2)' }");
+var ctx = TemplateContext.Create(source, source);
 
-Console.WriteLine(JsonToLLMConverter.Convert(JToken.Parse(userData)));
-```
+var transformer = new TemplateEngine(new ExpressionEngine(), new FactoryOperator());
+var result = transformer.Transform(template, ctx);
 
-**Output:**
-```
-Customer Information:
-- Name: Marco Rossi
-- Balance: 24.8 €
-- Last Top-Up: 5 October 2025
-- Active Offers:
-  - Giga Unlimited (9.99 €)
-  - Voice Premium (5.00 €)
-```
-
-Perfect for use in a prompt like:
-> “Given the customer data below, summarize the current offers and suggest the best upgrade option.”
-
----
-
-## ⚙️ Project Structure  
-```
-/src        → core library  
-/tests      → unit and integration tests  
-/examples   → sample usage  
-README.md   → documentation  
+// Output: { "result": "value1value2" }
 ```
 
 ---
 
-## 💡 Tips & Best Practices  
-- Clean your JSON before conversion to remove irrelevant fields  
-- Use semantic labels to improve comprehension  
-- Avoid passing very large JSON blobs directly to LLMs  
-- Combine JsonToLLM with well-designed prompts for best performance  
+### Access nested fields
+
+```csharp
+var source = JObject.Parse(@"{ 'prop1':'value1', 'object1': { 'prop2':'value2'} }");
+var template = JObject.Parse(@"{ 'result': '@value($.prop1)@value($.object1.prop2)' }");
+var ctx = TemplateContext.Create(source, source);
+
+var transformer = new TemplateEngine(new ExpressionEngine(), new FactoryOperator());
+var result = transformer.Transform(template, ctx);
+
+// Output: { "result": "value1value2" }
+```
 
 ---
 
-## 🤝 Contributing  
-Contributions are welcome!  
+### Format dates
 
-1. Fork the repository  
-2. Create a feature or fix branch  
-3. Add tests for your changes  
-4. Open a pull request describing your improvements  
+```csharp
+var source = JObject.Parse(@"{ 'originalDate':'29-05-2025'}");
+var template = JObject.Parse(@"{ 'formatedDate': '@formatdate(@value($.originalDate),dd-MM-yyyy,dd/MM/yyyy)' }");
+var ctx = TemplateContext.Create(source, source);
+
+var transformer = new TemplateEngine(new ExpressionEngine(), new FactoryOperator());
+var result = transformer.Transform(template, ctx);
+
+// Output: { "formatedDate": "29/05/2025" }
+```
 
 ---
 
-## 📄 License  
-This project is licensed under the **MIT License** — see the [LICENSE](./LICENSE) file for details.
+### Combine text and expressions
+
+```csharp
+var source = JObject.Parse(@"{ 'name':'giuliano', 'secondName':'arru', 'address': { 'city':'saronno'} }");
+var template = JObject.Parse(@"{ 'result1': 'The customer @value($.name) @value($.secondName) lives in @value($.address.city)' }");
+var ctx = TemplateContext.Create(source, source);
+
+var transformer = new TemplateEngine(new ExpressionEngine(), new FactoryOperator());
+var result = transformer.Transform(template, ctx);
+
+// Output: { "result1": "The customer giuliano arru lives in saronno" }
+```
 
 ---
 
-## 🙏 Acknowledgements  
-Thanks to the open-source community and all developers improving the interaction between structured data and AI models.
+### Iterate over arrays with `@operator: each`
+
+#### Objects as elements
+
+```csharp
+var source = JObject.Parse(@"{ 'array': [ { 'prop':'value'}, { 'prop':'value1'}, { 'prop':'value2'} ]}");
+var template = JObject.Parse(@"{ 'result': { '@operator':'each','@path':'array','@element':{ 'field': '@value(prop)' } } }");
+var ctx = TemplateContext.Create(source, source);
+
+var transformer = new TemplateEngine(new ExpressionEngine(), new FactoryOperator());
+var result = transformer.Transform(template, ctx);
+
+// Output:
+// {
+//   "result": [
+//     { "field": "value" },
+//     { "field": "value1" },
+//     { "field": "value2" }
+//   ]
+// }
+```
+
+#### Strings as elements
+
+```csharp
+var source = JObject.Parse(@"{ 'customers': [ { 'name':'giuliano', 'secondName':'arru'}, { 'name':'mario', 'secondName':'rossi'} ]}");
+var template = JObject.Parse(@"{ 'result': { '@operator':'each','@path':'customers','@element': 'Customer @value(name) @value(secondName)' } }");
+var ctx = TemplateContext.Create(source, source);
+
+var transformer = new TemplateEngine(new ExpressionEngine(), new FactoryOperator());
+var result = transformer.Transform(template, ctx);
+
+// Output:
+// {
+//   "result": [
+//     "Customer giuliano arru",
+//     "Customer mario rossi"
+//   ]
+// }
+```
+
+---
+
+### Nested `each` operators
+
+```csharp
+var source = JObject.Parse(@"{ 'customers': [ { 'name':'mario', 'secondName':'rossi', 'counters':[{'amount':3, 'unit':'euro', 'date': '29-05-2025'}, {'amount':4, 'unit':'dollar', 'date': '29-05-2025'}] } ]}");
+var template = JObject.Parse(@"{ 'result': {
+    '@operator':'each',
+    '@path':'customers',
+    '@element': {
+        'customer':'@value(name) @value(secondName)',
+        'counters': {
+            '@operator':'each',
+            '@path':'counters',
+            '@element': 'Speso @value(amount) @value(unit) in data @formatdate(@value(date),dd-MM-yyyy,dd/MM/yyyy)'
+        }
+    }
+}} ");
+var ctx = TemplateContext.Create(source, source);
+
+var transformer = new TemplateEngine(new ExpressionEngine(), new FactoryOperator());
+var result = transformer.Transform(template, ctx);
+
+// Output:
+// {
+//   "result": [
+//     {
+//       "customer": "mario rossi",
+//       "counters": [
+//         "Speso 3 euro in data 29/05/2025",
+//         "Speso 4 dollar in data 29/05/2025"
+//       ]
+//     }
+//   ]
+// }
+```
+
+---
+
+## 🧠 Architecture Overview
+
+* **TemplateEngine** – the main orchestrator that parses the template and executes transformations.
+* **ExpressionEngine** – evaluates inline expressions such as `@value()` and `@formatdate()`.
+* **FactoryOperator** – handles higher-level operators such as `@operator: each`.
+* **TemplateContext** – carries the input and contextual data during the transformation.
+
+---
+
+## 🤪 Running Tests
+
+```bash
+dotnet test
+```
+
+---
+
+## 📄 License
+
+MIT License – see the [LICENSE](LICENSE) file for details.
