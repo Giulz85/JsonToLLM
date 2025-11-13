@@ -1,5 +1,6 @@
 ﻿using HandlebarsDotNet;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Globalization;
 using Microsoft.CodeAnalysis.Scripting;
@@ -49,8 +50,7 @@ namespace JsonToLLM.Model
     /// If the value at the specified path is not found, a default value is returned.
     /// </summary>
     /// <remarks>
-    /// The default behavior is to search within the local context. 
-    /// Future enhancements may allow explicit selection between local and global contexts.
+    /// Default search is local context; if not found, it falls back to global context.
     /// </remarks>
     public class ValueExpression : ExpressionBase
     {
@@ -73,10 +73,22 @@ namespace JsonToLLM.Model
         /// </returns>
         public override JValue GetValue()
         {
-            //TODO check if use local or global context. Default is local
-            var value = (JValue?)Context.LocalContext.SelectToken(Path);
+            // Try local context first, then fallback to global
+            var token = Context.LocalContext.SelectToken(Path) ?? Context.GlobalContext.SelectToken(Path);
 
-            return value ?? Default;
+            if (token == null)
+                return Default;
+
+            // If it's already a scalar, return it as-is
+            if (token is JValue jv)
+                return jv;
+
+            // If it's an object or array, return a JSON string representation inside a JValue
+            if (token.Type == JTokenType.Object || token.Type == JTokenType.Array)
+                return new JValue(token.ToString(Formatting.None));
+
+            // Fallback: stringify anything else
+            return new JValue(token.ToString());
         }
 
         /// <summary>
@@ -143,7 +155,7 @@ namespace JsonToLLM.Model
                 string output = date.ToString(OutputFormat, new CultureInfo("it-IT"));
                 return new JValue(output);
             }
-            //TODO: create a custom exception for this scenario
+             //TODO: create a custom exception for this scenario
             throw new Exception("input format is not parsable");
         }
 
@@ -171,15 +183,15 @@ namespace JsonToLLM.Model
 
     /// <summary>
     /// Represents an expression that maps an input value to a predefined output value based on a dictionary.
-    /// </summary>
+    /// </summary>  
     /// <remarks>
     /// This class uses the provided input string as a key to look up a value in the specified mapping dictionary.
     /// If the key is found in the dictionary, the corresponding value is returned as a <see cref="JValue"/>.
     /// If the key is not found, a default value is returned as a <see cref="JValue"/>.
-    /// </remarks>
+    /// </remarks>    
     public class SwitchExpression : ExpressionBase
     {
-        /// <summary>
+/// <summary>
         /// Gets the input value used as a key for the mapping.
         /// </summary>
         public string Input { get; private set; }
@@ -194,7 +206,7 @@ namespace JsonToLLM.Model
         /// </summary>
         public string Default { get; private set; }
 
-        /// <summary>
+/// <summary>
         /// Initializes a new instance of the <see cref="SwitchExpression"/> class.
         /// </summary>
         /// <param name="context"></param>
@@ -211,7 +223,7 @@ namespace JsonToLLM.Model
             Default = @default ?? throw new ArgumentNullException(nameof(@default));
         }
 
-        /// <summary>
+/// <summary>
         /// Uses the input value as a key to look up a value in the mapping dictionary,
         /// and returns the corresponding value as a <see cref="JValue"/>,
         /// or the default value as a <see cref="JValue"/> if the key is not found.
@@ -234,7 +246,7 @@ namespace JsonToLLM.Model
     /// Represents a conditional expression that evaluates a Boolean <c>Condition</c>
     /// and returns either the <c>IfValue</c> or <c>ElseValue</c> as a JSON value.
     /// </summary>
-    /// <remarks>
+/// <remarks>
     /// This expression supports both synchronous and asynchronous evaluation. 
     /// It uses <c>CSharpScript.EvaluateAsync&lt;bool&gt;(Condition)</c> to execute the condition.
     /// The synchronous <see cref="GetValue"/> blocks the calling thread,
@@ -242,20 +254,20 @@ namespace JsonToLLM.Model
     /// </remarks>
     public class IfElseExpression : ExpressionBase
     {
-        /// <summary>
+/// <summary>
         /// Gets the C# condition to evaluate. Must be a valid boolean expression.
         /// </summary>
         public string Condition { get; }
-        /// <summary>
+/// <summary>
         /// Gets the value to return if the condition evaluates to <c>true</c>.
         /// </summary>
         public string IfValue { get; }
-        /// <summary>
+/// <summary>
         /// Gets the value to return if the condition evaluates to <c>false</c>.
         /// </summary>
         public string ElseValue { get; }
 
-        /// <summary>
+/// <summary>
         /// Initializes a new instance of the <see cref="IfElseExpression"/> class.
         /// </summary>
         /// <param name="context"></param>
@@ -273,7 +285,7 @@ namespace JsonToLLM.Model
             ElseValue = elseValue ?? throw new ArgumentNullException(nameof(elseValue));
         }
 
-        /// <summary>
+/// <summary>
         /// Evaluates the <see cref="Condition"/> synchronously using Roslyn scripting,
         /// blocking the calling thread until the result is available.
         /// </summary>
@@ -292,7 +304,7 @@ namespace JsonToLLM.Model
             return new JValue(cond ? IfValue : ElseValue);
         }
 
-        /// <summary>
+/// <summary>
         /// Evaluates the <see cref="Condition"/> asynchronously using Roslyn scripting.
         /// </summary>
         /// <returns>

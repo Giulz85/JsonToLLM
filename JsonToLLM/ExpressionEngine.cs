@@ -36,6 +36,10 @@ namespace JsonToLLM
             }
             while (ExpressionHelper.IsFunction(newValue));
 
+            // If the result is valid JSON (object or array), parse it
+            if (IsJson(newValue))
+                return JToken.Parse(newValue);
+
             return new JValue(newValue);
         }
 
@@ -98,7 +102,7 @@ namespace JsonToLLM
 
                 var mapped = mapping.TryGetValue(input, out var result) ? result.ToString() : defaultValue;
 
-                newValue = newValue.Substring(0, startIndex.Value) + mapped + newValue.Substring(endIndex.Value + 1);
+                                newValue = newValue.Substring(0, startIndex.Value) + mapped + newValue.Substring(endIndex.Value + 1);
             }
             else if (functionName == "ifelse")
             {
@@ -112,7 +116,7 @@ namespace JsonToLLM
                 var expression = new IfElseExpression(context, condition, ifValue, elseValue);
                 var expressionValue = expression.GetValue().Value<string>();
 
-                newValue = string.Concat(newValue.AsSpan(0, startIndex!.Value), expressionValue.AsSpan(), newValue.AsSpan(endIndex!.Value + 1));
+                                newValue = string.Concat(newValue.AsSpan(0, startIndex!.Value), expressionValue.AsSpan(), newValue.AsSpan(endIndex!.Value + 1));
             }
             else
             {
@@ -127,7 +131,29 @@ namespace JsonToLLM
             return token.Type == JTokenType.String && ExpressionHelper.IsFunction(token.Value<string>() ?? string.Empty);
         }
 
-        public static bool IsLiteralString(string str) 
+        public static bool IsLiteralString(string str)
             => str.Length >= 2 && str[0].Equals('`') && str[^1].Equals('`');
+
+        private static bool IsJson(string input)
+        {
+            input = input?.Trim() ?? string.Empty;
+            if (string.IsNullOrEmpty(input))
+                return false;
+
+            if ((input.StartsWith("{") && input.EndsWith("}")) || (input.StartsWith("[") && input.EndsWith("]")))
+            {
+                try
+                {
+                    JToken.Parse(input);
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+
+            return false;
+        }
     }
 }
