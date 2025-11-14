@@ -1,4 +1,5 @@
 ﻿using HandlebarsDotNet;
+using JsonToLLM.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -9,7 +10,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JsonToLLM.Model
+namespace JsonToLLM.Operators
 {
     /// <summary>
     /// Operator are node in json that are used to get data from context and return a new JToken
@@ -147,7 +148,7 @@ namespace JsonToLLM.Model
                     var tokenValue = item.SelectToken(Key, errorWhenNoMatch: false);
                     if (tokenValue != null)
                     {
-                        sum += (tokenValue.Type) switch
+                        sum += tokenValue.Type switch
                         {
                             JTokenType.Integer => item.Value<int>(Key),
                             JTokenType.Float => item.Value<double>(Key),
@@ -379,8 +380,10 @@ namespace JsonToLLM.Model
         [JsonProperty("@default")]
         public JToken Default { get; private set; } = JValue.CreateNull();// Default to null
 
-        public ElementOperator()
+        public ElementOperator(string path,string @default)
         {
+            Path = path ?? throw new ArgumentNullException(nameof(path));
+            Default = @default != null ? JToken.FromObject(@default) : JValue.CreateNull();
 
         }
 
