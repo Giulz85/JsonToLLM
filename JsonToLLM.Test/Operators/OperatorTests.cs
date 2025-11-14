@@ -212,7 +212,7 @@ namespace JsonToLLM.Test.Operators
             var ctx = TemplateContext.Create(source, source);
 
             var defaultToken = JValue.CreateNull();
-            var op = new ElementOperator(); // default Path = "$", Default = null
+            var op = new ElementOperator() { Path = "invalidPath" }; // default Path = "$", Default = null
             var result = op.Evaluate(ctx);
 
             // Since nothing exists at "$" in an empty object, SelectToken returns Default (null)

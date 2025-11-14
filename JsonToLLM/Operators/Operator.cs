@@ -375,16 +375,13 @@ namespace JsonToLLM.Operators
         public const string Operator = "element";
 
         [JsonProperty("@path")]
-        public string Path { get; private set; } = "$";
+        public string Path { get; set; } = "$";
 
         [JsonProperty("@default")]
-        public JToken Default { get; private set; } = JValue.CreateNull();// Default to null
+        public JToken Default { get; set; } = JValue.CreateNull();// Default to null
 
-        public ElementOperator(string path,string @default)
+        public ElementOperator()
         {
-            Path = path ?? throw new ArgumentNullException(nameof(path));
-            Default = @default != null ? JToken.FromObject(@default) : JValue.CreateNull();
-
         }
 
         public OperatorResult Evaluate(TemplateContext templateContext)
