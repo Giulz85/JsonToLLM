@@ -1,11 +1,9 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
+﻿using HandlebarsDotNet;
+using Microsoft.CodeAnalysis.CSharp.Scripting;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.CodeAnalysis.Scripting;
 
 namespace JsonToLLM.Model
 {
@@ -25,26 +23,41 @@ namespace JsonToLLM.Model
         JValue GetValue();
     }
 
+    public interface IExpressionAsync : IExpression
+    {
+        Task<JValue> GetValueAsync();
+    }
+
+    public abstract class ExpressionBase(TemplateContext context) : IExpressionAsync
+    {
+        /// <summary>
+        /// Gets the context containing the local and global JSON tokens.
+        /// </summary>
+        public TemplateContext Context { get; } = context ?? throw new ArgumentNullException(nameof(context));
+
+        public abstract JValue GetValue();
+
+        public virtual async Task<JValue> GetValueAsync()
+        {
+            // Default: just delegating
+            return await Task.FromResult(GetValue()).ConfigureAwait(false);
+        }
+    }
+
     /// <summary>
     /// Represents an expression that retrieves a value from a JSON structure based on a specified path.
     /// The path can refer to either the local or global context within the provided <see cref="Context"/>.
     /// If the value at the specified path is not found, a default value is returned.
     /// </summary>
     /// <remarks>
-    /// The default behavior is to search within the local context. 
-    /// Future enhancements may allow explicit selection between local and global contexts.
+    /// Default search is local context; if not found, it falls back to global context.
     /// </remarks>
-    public class ValueExpression : IExpression
+    public class ValueExpression : ExpressionBase
     {
         /// <summary>
         /// Gets the JSON path used to select the value.
         /// </summary>
         public string Path { get; private set; }
-
-        /// <summary>
-        /// Gets the context containing the local and global JSON tokens.
-        /// </summary>
-        public TemplateContext Context { get; private set; }
 
         /// <summary>
         /// Gets the default value to return if the path does not resolve to a value.
@@ -58,12 +71,24 @@ namespace JsonToLLM.Model
         /// <returns>
         /// The <see cref="JValue"/> found at the specified path, or the default value if not found.
         /// </returns>
-        public JValue GetValue()
+        public override JValue GetValue()
         {
-            //TODO check if use local or global context. Default is local
-            var value = (JValue?)Context.LocalContext.SelectToken(Path);
+            // Try local context first, then fallback to global
+            var token = Context.LocalContext.SelectToken(Path) ?? Context.GlobalContext.SelectToken(Path);
 
-            return value ?? Default;
+            if (token == null)
+                return Default;
+
+            // If it's already a scalar, return it as-is
+            if (token is JValue jv)
+                return jv;
+
+            // If it's an object or array, return a JSON string representation inside a JValue
+            if (token.Type == JTokenType.Object || token.Type == JTokenType.Array)
+                return new JValue(token.ToString(Formatting.None));
+
+            // Fallback: stringify anything else
+            return new JValue(token.ToString());
         }
 
         /// <summary>
@@ -75,14 +100,12 @@ namespace JsonToLLM.Model
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="path"/>, <paramref name="context"/>, or <paramref name="defaultValue"/> is null or empty.
         /// </exception>
-        public ValueExpression(TemplateContext context, string path, JValue defaultValue)
+        public ValueExpression(TemplateContext context, string path, JValue defaultValue) : base(context)
         {
             if (string.IsNullOrWhiteSpace(path)) throw new ArgumentNullException(nameof(path));
-            if (context == null) throw new ArgumentNullException(nameof(context));
             if (defaultValue == null) throw new ArgumentNullException(nameof(defaultValue));
 
             Path = path;
-            Context = context;
             Default = defaultValue;
         }
     }
@@ -95,7 +118,7 @@ namespace JsonToLLM.Model
     /// It parses the date string using <see cref="OriginalFormat"/> and outputs it as a string in <see cref="OutputFormat"/>.
     /// If parsing fails, an exception is thrown.
     /// </remarks>
-    public class FormatDateExpression : IExpression
+    public class FormatDateExpression : ExpressionBase
     {
         /// <summary>
         /// Gets the expected format of the input date string.
@@ -106,11 +129,6 @@ namespace JsonToLLM.Model
         /// Gets the format to which the date should be converted.
         /// </summary>
         public string OutputFormat { get; private set; }
-
-        /// <summary>
-        /// Gets the context containing local and global JSON tokens.
-        /// </summary>
-        public TemplateContext Context { get; private set; }
 
         /// <summary>
         /// Date to trasform
@@ -127,7 +145,7 @@ namespace JsonToLLM.Model
         /// <exception cref="Exception">
         /// Thrown if the input string cannot be parsed as a date using <see cref="OriginalFormat"/>.
         /// </exception>
-        public JValue GetValue()
+        public override JValue GetValue()
         {
             string input = Date;
             DateTime date;
@@ -137,7 +155,7 @@ namespace JsonToLLM.Model
                 string output = date.ToString(OutputFormat, new CultureInfo("it-IT"));
                 return new JValue(output);
             }
-            //TODO: create a custom exception for this scenario
+             //TODO: create a custom exception for this scenario
             throw new Exception("input format is not parsable");
         }
 
@@ -151,14 +169,12 @@ namespace JsonToLLM.Model
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="context"/>, <paramref name="originalFormat"/>, or <paramref name="expression"/> is null or empty.
         /// </exception>
-        public FormatDateExpression(TemplateContext context, string date, string originalFormat, string outputFormat)
+        public FormatDateExpression(TemplateContext context, string date, string originalFormat, string outputFormat) : base(context)
         {
-            if (context == null) throw new ArgumentNullException(nameof(context));
             if (string.IsNullOrWhiteSpace(originalFormat)) throw new ArgumentNullException(nameof(originalFormat));
             if (string.IsNullOrWhiteSpace(outputFormat)) throw new ArgumentNullException(nameof(outputFormat));
             if (date == null) throw new ArgumentNullException(nameof(date));
 
-            Context = context;
             OriginalFormat = originalFormat;
             OutputFormat = outputFormat;
             Date = date;
@@ -167,15 +183,15 @@ namespace JsonToLLM.Model
 
     /// <summary>
     /// Represents an expression that maps an input value to a predefined output value based on a dictionary.
-    /// </summary>
+    /// </summary>  
     /// <remarks>
     /// This class uses the provided input string as a key to look up a value in the specified mapping dictionary.
     /// If the key is found in the dictionary, the corresponding value is returned as a <see cref="JValue"/>.
     /// If the key is not found, a default value is returned as a <see cref="JValue"/>.
-    /// </remarks>
-    public class SwitchExpression : IExpression
+    /// </remarks>    
+    public class SwitchExpression : ExpressionBase
     {
-        /// <summary>
+/// <summary>
         /// Gets the input value used as a key for the mapping.
         /// </summary>
         public string Input { get; private set; }
@@ -190,23 +206,24 @@ namespace JsonToLLM.Model
         /// </summary>
         public string Default { get; private set; }
 
-        /// <summary>
+/// <summary>
         /// Initializes a new instance of the <see cref="SwitchExpression"/> class.
         /// </summary>
+        /// <param name="context"></param>
         /// <param name="input">The input value used as a key for the mapping.</param>
         /// <param name="mapping">The dictionary that maps input values to output values.</param>
         /// <param name="default">The default value to return if the input value is not found in the mapping.</param>
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="input"/>, <paramref name="mapping"/>, or <paramref name="default"/> is null.
         /// </exception>
-        public SwitchExpression(string input, Dictionary<string, JValue> mapping, string @default)
+        public SwitchExpression(TemplateContext context, string input, Dictionary<string, JValue> mapping, string @default) : base(context)
         {
             Input = input ?? throw new ArgumentNullException(nameof(input));
             Mapping = mapping ?? throw new ArgumentNullException(nameof(mapping));
             Default = @default ?? throw new ArgumentNullException(nameof(@default));
         }
 
-        /// <summary>
+/// <summary>
         /// Uses the input value as a key to look up a value in the mapping dictionary,
         /// and returns the corresponding value as a <see cref="JValue"/>,
         /// or the default value as a <see cref="JValue"/> if the key is not found.
@@ -214,7 +231,7 @@ namespace JsonToLLM.Model
         /// <returns>
         /// The <see cref="JValue"/> corresponding to the input value, or the default value if the input value is not found in the mapping.
         /// </returns>
-        public JValue GetValue()
+        public override JValue GetValue()
         {
             var inputValue = Input.ToString();
             if (inputValue != null && Mapping.TryGetValue(inputValue, out var mappedValue))
@@ -222,6 +239,86 @@ namespace JsonToLLM.Model
                 return new JValue(mappedValue);
             }
             return new JValue(Default);
+        }
+    }
+
+    /// <summary>
+    /// Represents a conditional expression that evaluates a Boolean <c>Condition</c>
+    /// and returns either the <c>IfValue</c> or <c>ElseValue</c> as a JSON value.
+    /// </summary>
+/// <remarks>
+    /// This expression supports both synchronous and asynchronous evaluation. 
+    /// It uses <c>CSharpScript.EvaluateAsync&lt;bool&gt;(Condition)</c> to execute the condition.
+    /// The synchronous <see cref="GetValue"/> blocks the calling thread,
+    /// while <see cref="GetValueAsync"/> performs truly asynchronous evaluation.
+    /// </remarks>
+    public class IfElseExpression : ExpressionBase
+    {
+/// <summary>
+        /// Gets the C# condition to evaluate. Must be a valid boolean expression.
+        /// </summary>
+        public string Condition { get; }
+/// <summary>
+        /// Gets the value to return if the condition evaluates to <c>true</c>.
+        /// </summary>
+        public string IfValue { get; }
+/// <summary>
+        /// Gets the value to return if the condition evaluates to <c>false</c>.
+        /// </summary>
+        public string ElseValue { get; }
+
+/// <summary>
+        /// Initializes a new instance of the <see cref="IfElseExpression"/> class.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="condition">A C# expression string that yields a boolean result.</param>
+        /// <param name="ifValue">The string to return if the condition is <c>true</c>.</param>
+        /// <param name="elseValue">The string to return if the condition is <c>false</c>.</param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if any of <paramref name="condition"/>, <paramref name="ifValue"/>,
+        /// or <paramref name="elseValue"/> are <c>null</c>.
+        /// </exception>
+        public IfElseExpression(TemplateContext context, string condition, string ifValue, string elseValue) : base(context)
+        {
+            Condition = condition ?? throw new ArgumentNullException(nameof(condition));
+            IfValue = ifValue ?? throw new ArgumentNullException(nameof(ifValue));
+            ElseValue = elseValue ?? throw new ArgumentNullException(nameof(elseValue));
+        }
+
+/// <summary>
+        /// Evaluates the <see cref="Condition"/> synchronously using Roslyn scripting,
+        /// blocking the calling thread until the result is available.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="JValue"/> containing <see cref="IfValue"/> or <see cref="ElseValue"/>,
+        /// depending on whether the condition is true or false.
+        /// </returns>
+        /// <exception cref="CompilationErrorException">
+        /// If the <see cref="Condition"/> string is not a valid boolean expression.
+        /// </exception>
+        public override JValue GetValue()
+        {
+            var cond = CSharpScript.EvaluateAsync<bool>(Condition)
+                .ConfigureAwait(false)
+                .GetAwaiter().GetResult();
+            return new JValue(cond ? IfValue : ElseValue);
+        }
+
+/// <summary>
+        /// Evaluates the <see cref="Condition"/> asynchronously using Roslyn scripting.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="Task{JValue}"/> that resolves to a <see cref="JValue"/> containing
+        /// <see cref="IfValue"/> or <see cref="ElseValue"/>,
+        /// depending on whether the condition is true or false.
+        /// </returns>
+        /// <exception cref="CompilationErrorException">
+        /// If the <see cref="Condition"/> string is not a valid boolean expression.
+        /// </exception>
+        public override async Task<JValue> GetValueAsync()
+        {
+            var cond = await CSharpScript.EvaluateAsync<bool>(Condition).ConfigureAwait(false);
+            return new JValue(cond ? IfValue : ElseValue);
         }
     }
 }

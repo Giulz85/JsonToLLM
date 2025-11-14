@@ -27,13 +27,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="json\dxl-response-final-template.json">
+    <None Update="json\response-final-template.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="json\dxl-response-final.json">
+    <None Update="json\response-final.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="json\dxl-response.json">
+    <None Update="json\response.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

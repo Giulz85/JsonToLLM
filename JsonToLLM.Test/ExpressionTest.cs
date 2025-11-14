@@ -1,9 +1,4 @@
-
-using Newtonsoft.Json;
-using System.Collections;
 using Newtonsoft.Json.Linq;
-using System;
-using Xunit;
 using JsonToLLM.Model;
 
 namespace JsonToLLM.Test
@@ -17,7 +12,7 @@ namespace JsonToLLM.Test
             var json = JObject.Parse(@"{ 'foo': 123 }");
             var context = TemplateContext.Create(json, json);
             IExpression expr = new ValueExpression(context, "foo", new JValue(0));
-
+            
             // Act
             var result = expr.GetValue();
 
@@ -123,6 +118,31 @@ namespace JsonToLLM.Test
             var context = TemplateContext.Create(json, json);
 
             Assert.Throws<ArgumentNullException>(() => new FormatDateExpression(context, null, "yyyy-MM-dd", "dd/MM/yyyy"));
+        }
+
+        [Theory]
+        // Single-line conditions
+        [InlineData("2 > 1", true)]
+        [InlineData("\"my string\" is null", false)]
+        [InlineData("string.IsNullOrWhiteSpace(\"my string\")", false)]
+        [InlineData("string.IsNullOrWhiteSpace(\" \")", true)]
+        // Multi-line conditions
+        [InlineData("var name = \"foo\"; return string.Equals(name, \"bar\");", false)]
+        [InlineData("var name = \"foo\"; return string.Equals(name, \"foo\");", true)]
+        [InlineData("var number1 = 16; var number2 = 2; return number1%number2 == 0;", true)]
+        public async Task IfElseExpression_ReturnsValueBasedOnConditionEvaluation(string condition, bool conditionEvaluation)
+        {
+            // Arrange
+            const string ifValue = "if value";
+            const string elseValue = "else value";
+            var context = TemplateContext.Create(JObject.Parse("{}"), JObject.Parse("{}"));
+            var expr = new IfElseExpression(context, condition, ifValue, elseValue);
+
+            // Act
+            var result = await expr.GetValueAsync();
+
+            // Assert
+            Assert.Equal(conditionEvaluation ? ifValue : elseValue, result.Value<string>());
         }
     }
 }
