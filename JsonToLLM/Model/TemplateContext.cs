@@ -15,6 +15,9 @@ namespace JsonToLLM.Model
         public JToken GlobalContext { get; private set; }
         public JToken LocalContext { get; private set; }
 
+        public void UpdateLocalContext(JToken localContext)
+            => LocalContext = localContext ?? throw new ArgumentNullException(nameof(localContext), "Local context cannot be null.");
+
         public TemplateContext(JToken globalContext, JToken localContext)
         {
             GlobalContext = globalContext;
