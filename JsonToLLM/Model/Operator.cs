@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core.Tokenizer;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -198,6 +199,11 @@ namespace JsonToLLM.Model
 
     /// <summary>
     /// Allow to patch an object in the context. It can add a new property if it is null, update an existing property or remove a property.
+    /// Operation are performed in the following order: 
+    /// 1. addIfNull 
+    /// 2. addOrUpdate 
+    /// 3. removeKeys 
+    /// 4. orderKeys
     /// </summary>
     public class ObjectPatchOperator : IOperator
     {
@@ -218,6 +224,8 @@ namespace JsonToLLM.Model
         [JsonProperty("@removeKeys")]
         public List<string>? RemoveKeys { get; private set; } = null;
 
+        [JsonProperty("@orderKeys")]
+        public List<OrderKeyModel>? OrderKeys { get; private set; } = null;
 
         public ObjectPatchOperator()
         {
@@ -255,7 +263,6 @@ namespace JsonToLLM.Model
                 // Upsert 
                 if (AddIfNull != null && AddIfNull.Count > 0)
                 {
-
                     foreach (var kvp in AddIfNull)
                     {
                         if (!jObject.ContainsKey(kvp.Key))
@@ -263,7 +270,6 @@ namespace JsonToLLM.Model
                             clonedObject[kvp.Key] = kvp.Value;
                         }
                     }
-
                 }
                 if (AddOrUpdate != null && AddOrUpdate.Count > 0)
                 {
@@ -279,13 +285,57 @@ namespace JsonToLLM.Model
                         clonedObject.Remove(key);
                     }
                 }
+                if(OrderKeys != null && OrderKeys.Count > 0)
+                {
+                    clonedObject = HandleOrderKeys(clonedObject, OrderKeys);
+                }
                 return OperatorResult.Create(clonedObject);
             }
-
             return OperatorResult.Create(jtoken); // If the token is not an object, return it as is (could be null or another type)
         }
 
+
+        private static JObject HandleOrderKeys(JObject original, List<OrderKeyModel> reorderList)
+        {
+            // Lavora su una lista di coppie (chiave, valore)
+            var props = new List<JProperty>(original.Properties());
+
+            foreach (var elem in reorderList)
+            {
+                var prop = elem.Key;
+                var index = elem.Index;
+
+                // Trova la proprietà
+                var current = props.Find(p => p.Name == prop);
+                if (current == null)
+                    continue;
+
+                // Rimuovila e reinseriscila alla posizione indicata (bounded)
+                props.Remove(current);
+                var boundedIndex = Math.Clamp(index, 0, props.Count);
+                props.Insert(boundedIndex, current);
+            }
+
+            // Ricrea un nuovo JObject nell’ordine desiderato
+            var newObj = new JObject();
+            foreach (var p in props)
+                newObj.Add(p);
+
+            return newObj;
+        }
+
     }
+
+
+    public class OrderKeyModel
+    {
+        [JsonProperty("@key")]
+        public string Key { get; set; }
+
+        [JsonProperty("@index")]
+        public int Index { get; set; }
+    }
+
 
 
     /// <summary>
@@ -309,14 +359,15 @@ namespace JsonToLLM.Model
 
         public OperatorResult Evaluate(TemplateContext templateContext)
         {
-            return OperatorResult.CreateWithNewContext(Element,TemplateContext.Create(templateContext.GlobalContext, Context));
+            return OperatorResult.CreateWithNewContext(
+                Element, 
+                TemplateContext.Create(templateContext.GlobalContext, Context));
         }
-
     }
 
-
     /// <summary>
-    /// Create a new Context based on the current context and the specified element.
+    /// Element Operator allow to select a JToken from the local context based on a json path to insert in the output.
+    /// Usefull when it is needed to project the complete object to output. It works also to select jvalue.
     /// </summary>
     public class ElementOperator : IOperator
     {
@@ -340,39 +391,4 @@ namespace JsonToLLM.Model
         }
 
     }
-
-
-    /// <summary>
-    /// Traform JToken selected by path in a new JToken specified in Element
-    /// </summary>
-    //public class CompositeOperator : IOperator
-    //{
-    //    public const string Operator = "composite";
-
-    //    public List<IOperator> Operators { get; set; }
-
-
-    //    public CompositeOperator()
-    //    {
-
-    //    }
-
-    //    public JToken Evaluate(TemplateContext templateContext)
-    //    {
-    //        JToken result = JValue.CreateNull();
-    //        foreach (var op in Operators)
-    //        {
-
-    //            var evaluatedToken = op.Evaluate(templateContext);
-    //            if (evaluatedToken.Type != JTokenType.Null)
-    //            {
-    //                result = evaluatedToken; // Update result with the last evaluated token
-    //            }
-    //        }
-    //        return result;
-
-    //    }
-
-    //}
-
 }
