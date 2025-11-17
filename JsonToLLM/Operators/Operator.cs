@@ -279,17 +279,18 @@ namespace JsonToLLM.Operators
                         clonedObject[kvp.Key] = kvp.Value;
                     }
                 }
-                if(RemoveKeys != null && RemoveKeys.Count > 0)
+                if (RemoveKeys != null && RemoveKeys.Count > 0)
                 {
                     foreach (var key in RemoveKeys)
                     {
                         clonedObject.Remove(key);
                     }
                 }
-                if(OrderKeys != null && OrderKeys.Count > 0)
+                if (OrderKeys != null && OrderKeys.Count > 0)
                 {
                     clonedObject = HandleOrderKeys(clonedObject, OrderKeys);
                 }
+                //print clonedElement in console
                 return OperatorResult.Create(clonedObject);
             }
             return OperatorResult.Create(jtoken); // If the token is not an object, return it as is (could be null or another type)
