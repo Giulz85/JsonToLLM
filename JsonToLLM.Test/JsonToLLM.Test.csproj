@@ -27,6 +27,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="json\each_operator_source_template.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="json\secret_costdispute-invoice-ouput.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

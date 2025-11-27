@@ -11,7 +11,7 @@ using Newtonsoft.Json.Linq;
 
 namespace JsonToLLM.Test
 {
-    public class UnitTest1
+    public class HandlebarsTests
     {
         public class EnvGenerator : IEnumerable<object[]>
         {
@@ -52,7 +52,7 @@ namespace JsonToLLM.Test
         [Fact]
         public void JsonTestObjects()
         {
-            JObject model = JObject.Parse(File.ReadAllText(@".\json\dxl-response.json"));
+            JObject model = JObject.Parse(File.ReadAllText(@".\json\response-final.json"));
 
 
             var source = @"

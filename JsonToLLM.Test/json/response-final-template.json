@@ -4,68 +4,68 @@
     "@operator": "each",
     "@path": "costdispute.topups",
     "@element": {
+      "Ricarica di @value(amount) effettuata in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) tramite '@value(type)'",
+      "description": "Ricarica di @value(amount) effettuata in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) tramite '@value(type)'",
+      "importo": {
+        "@operator": "float",
+        "@path": "amount",
+        "@default": 0.0
+      },
       //"Ricarica di @value(amount) effettuata in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) tramite '@value(type)'"
-      //"description": "Ricarica di @value(amount) effettuata in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) tramite '@value(type)'",
-      //"importo": {
-      //  "@operator": "float",
-      //  "@path": "amount",
-      //  "@default": 0.0
-      //},
-      //"Ricarica di @value(amount) effettuata in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) tramite '@value(type)'"
-      //"description_with_new_context": {
-      //  "@operator": "context",
-      //  "@context": {
-      //    "@operator": "objectpatch",
-      //    "@addIfnull": {
-      //      "addIfnull": "newProp",
-      //      "date": "@value(otherDate)"
-      //    },
-      //    "@removeKeys": [ "propToRemove" ],
-      //    "@addOrUpdate": {
-      //      "addOrUpdateKey": "@value(propToUpdate)",
-      //      "propToUpdate": "updatedValue"
-      //    },
-      //    "@orderKeys": [
-      //      {
-      //        "@key": "addOrUpdateKey",
-      //        "@index": 0
-      //      }
-      //    ]
-      //  },
-      //  "@element": {
-      //    "description": "Ricarica di @value(amount) effettuata in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) tramite '@value(type)'",
-      //    "elem": {
-      //      "@operator": "element"
-      //    }
-      //  }
-      //}
+      "description_with_new_context": {
+        "@operator": "context",
+        "@context": {
+          "@operator": "objectpatch",
+          "@addIfnull": {
+            "addIfnull": "newProp",
+            "date": "@value(otherDate)"
+          },
+          "@removeKeys": [ "propToRemove" ],
+          "@addOrUpdate": {
+            "addOrUpdateKey": "@value(propToUpdate)",
+            "propToUpdate": "updatedValue"
+          },
+          "@orderKeys": [
+            {
+              "@key": "addOrUpdateKey",
+              "@index": 0
+            }
+          ]
+        },
+        "@element": {
+          "description": "Ricarica di @value(amount) effettuata in data @formatdate(@value(date),yyyy-MM-dd,yyyy/MM/dd) tramite '@value(type)'",
+          "elem": {
+            "@operator": "element"
+          }
+        }
+      }
 
       //Agisce sul contesto corrente e modifica l'object 
-      "@operator": "objectpatch",
-      "@addIfnull": {
-        "addIfnull": "newProp",
-        "date": "@value(otherDate)"
-      },
-      "@removeKeys": [ "type" ],
-      "@addOrUpdate": {
-        "addOrUpdateKey": "@value(propToUpdate)",
-        "propToUpdate": "updatedValue",
-        "amount2": { "@operator": "element", "@path": "amount" }
-      },
-      "@orderKeys": [
-        {
-          "@key": "addOrUpdateKey",
-          "@index": 0
-        },
-        {
-          "@key": "amount",
-          "@index": 20
-        },
-        {
-          "@key": "notExistProp",
-          "@index": 2
-        }
-      ]
+      //"@operator": "objectpatch",
+      //"@addIfnull": {
+      //  "addIfnull": "newProp",
+      //  "date": "@value(otherDate)"
+      //},
+      //"@removeKeys": [ "type" ],
+      //"@addOrUpdate": {
+      //  "addOrUpdateKey": "@value(propToUpdate)",
+      //  "propToUpdate": "updatedValue",
+      //  "amount2": { "@operator": "element", "@path": "amount" }
+      //},
+      //"@orderKeys": [
+      //  {
+      //    "@key": "addOrUpdateKey",
+      //    "@index": 0
+      //  },
+      //  {
+      //    "@key": "amount",
+      //    "@index": 20
+      //  },
+      //  {
+      //    "@key": "notExistProp",
+      //    "@index": 2
+      //  }
+      //]
 
 
 
@@ -129,6 +129,7 @@
   "altri_contatori": {
     "@operator": "each",
     "@path": "costdispute.otherCounters",
+    "@filter": "jsonpath expression es'$.buckets[?(@.remaining > 0)]'",
     "@element": {
       "@operator": "each",
       "@path": "buckets",

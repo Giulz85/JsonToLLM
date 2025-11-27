@@ -191,7 +191,7 @@ namespace JsonToLLM.Model
     /// </remarks>    
     public class SwitchExpression : ExpressionBase
     {
-/// <summary>
+        /// <summary>
         /// Gets the input value used as a key for the mapping.
         /// </summary>
         public string Input { get; private set; }
@@ -206,7 +206,7 @@ namespace JsonToLLM.Model
         /// </summary>
         public string Default { get; private set; }
 
-/// <summary>
+        /// <summary>
         /// Initializes a new instance of the <see cref="SwitchExpression"/> class.
         /// </summary>
         /// <param name="context"></param>
@@ -223,7 +223,7 @@ namespace JsonToLLM.Model
             Default = @default ?? throw new ArgumentNullException(nameof(@default));
         }
 
-/// <summary>
+        /// <summary>
         /// Uses the input value as a key to look up a value in the mapping dictionary,
         /// and returns the corresponding value as a <see cref="JValue"/>,
         /// or the default value as a <see cref="JValue"/> if the key is not found.
@@ -246,7 +246,7 @@ namespace JsonToLLM.Model
     /// Represents a conditional expression that evaluates a Boolean <c>Condition</c>
     /// and returns either the <c>IfValue</c> or <c>ElseValue</c> as a JSON value.
     /// </summary>
-/// <remarks>
+    /// <remarks>
     /// This expression supports both synchronous and asynchronous evaluation. 
     /// It uses <c>CSharpScript.EvaluateAsync&lt;bool&gt;(Condition)</c> to execute the condition.
     /// The synchronous <see cref="GetValue"/> blocks the calling thread,
@@ -254,20 +254,20 @@ namespace JsonToLLM.Model
     /// </remarks>
     public class IfElseExpression : ExpressionBase
     {
-/// <summary>
+        /// <summary>
         /// Gets the C# condition to evaluate. Must be a valid boolean expression.
         /// </summary>
         public string Condition { get; }
-/// <summary>
+        /// <summary>
         /// Gets the value to return if the condition evaluates to <c>true</c>.
         /// </summary>
         public string IfValue { get; }
-/// <summary>
+        /// <summary>
         /// Gets the value to return if the condition evaluates to <c>false</c>.
         /// </summary>
         public string ElseValue { get; }
 
-/// <summary>
+        /// <summary>
         /// Initializes a new instance of the <see cref="IfElseExpression"/> class.
         /// </summary>
         /// <param name="context"></param>
@@ -285,7 +285,7 @@ namespace JsonToLLM.Model
             ElseValue = elseValue ?? throw new ArgumentNullException(nameof(elseValue));
         }
 
-/// <summary>
+        /// <summary>
         /// Evaluates the <see cref="Condition"/> synchronously using Roslyn scripting,
         /// blocking the calling thread until the result is available.
         /// </summary>
@@ -304,7 +304,7 @@ namespace JsonToLLM.Model
             return new JValue(cond ? IfValue : ElseValue);
         }
 
-/// <summary>
+        /// <summary>
         /// Evaluates the <see cref="Condition"/> asynchronously using Roslyn scripting.
         /// </summary>
         /// <returns>

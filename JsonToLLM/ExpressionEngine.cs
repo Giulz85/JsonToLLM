@@ -21,13 +21,22 @@ namespace JsonToLLM
 
         public JToken Evaluate(JToken jtoken, TemplateContext context)
         {
+            if (jtoken == null)
+                throw new ArgumentNullException(nameof(jtoken));
+            if (context == null )
+                throw new ArgumentNullException(nameof(context));
+            if (context.LocalContext == null)
+                throw new ArgumentNullException(nameof(context.LocalContext));
+            if(context.GlobalContext == null)
+                throw new ArgumentNullException(nameof(context.GlobalContext));
+
             if (!IsExpression(jtoken))
                 return jtoken;
 
-            if (jtoken == null)
-                throw new ArgumentNullException(nameof(jtoken));
-            if (context == null)
-                throw new ArgumentNullException(nameof(context));
+            //if (jtoken == null)
+            //    throw new ArgumentNullException(nameof(jtoken));
+            //if (context == null)
+            //    throw new ArgumentNullException(nameof(context));
 
             var newValue = jtoken.Value<string>() ?? throw new ArgumentException($"Field with expression cannot be null or empty in path '{jtoken.Path}'.");
             do

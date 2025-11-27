@@ -27,8 +27,8 @@ namespace JsonToLLM.Test
         public void Transform_DxlJsonWithComplexTemplate_ResolvesValue()
         {
            
-            var source = JObject.Parse(File.ReadAllText(@".\json\response-costdispute-invoce.json"));
-            var template = JObject.Parse(File.ReadAllText(@".\json\template-costdispute-invoce.json"));
+            var source = JObject.Parse(File.ReadAllText(@".\json\each_operator_source_template.json"));
+            var template = JObject.Parse(File.ReadAllText(@".\json\each_operator_source_template.json"));
             var ctx = TemplateContext.Create(source, source);
 
             IFactoryOperator factoryOperator = new FactoryOperator();

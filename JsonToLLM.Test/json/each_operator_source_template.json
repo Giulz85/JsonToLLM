@@ -1,0 +1,25 @@
+{
+  "students": [
+    {
+      "id": "1",  
+        "name": "Mario",
+        "surname": "Rossi",
+        "email": "mario.rossi@uni.it"
+      
+    },
+    {
+      "id": "2",
+      "name": "Giuseppe",
+      "surname": "Verdi",
+      "email": "giuseppe.verdi@uni.it"
+    }
+  ],
+  "students_temmplate": {
+    "@operator": "each",
+    "@path": "students",
+    "@element": {
+      "result": "Student @value(name) @value(surname) has following mail @value(email)"
+    }
+  }
+
+}
