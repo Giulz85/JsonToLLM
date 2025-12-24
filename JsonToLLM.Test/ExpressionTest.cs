@@ -1,237 +1,220 @@
-using System;
-using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using JsonToLLM.Model;
-using Xunit;
 
-namespace JsonToLLM.Test
+namespace JsonToLLM.Test;
+
+public class ExpressionTest
 {
-    public class ExpressionTest
+    [Fact]
+    public void ValueExpression_PathExists_ReturnsValue()
     {
-        [Fact]
-        public void ValueExpression_PathExists_ReturnsValue()
-        {
-            // Arrange
-            var json = JObject.Parse(@"{ 'foo': 123 }");
-            var context = TemplateContext.Create(json, json);
-            IExpression expr = new ValueExpression(context, "foo", new JValue(0));
+        // Arrange
+        var json = JObject.Parse("{ 'foo': 123 }");
+        var context = TemplateContext.Create(json, json);
+        IExpression expr = new ValueExpression(context, "foo", "0");
             
-            // Act
-            var result = expr.GetValue();
+        // Act
+        var result = expr.GetValue();
 
-            // Assert
-            Assert.Equal(123, result.Value<int>());
-        }
+        // Assert
+        Assert.Equal("123", result, StringComparer.InvariantCulture);
+    }
 
-        [Fact]
-        public void ValueExpression_PathDoesNotExist_ReturnsDefault()
-        {
-            // Arrange
-            var json = JObject.Parse(@"{ 'foo': 123 }");
-            var context = TemplateContext.Create(json, json);
-            var expr = new ValueExpression(context, "bar", new JValue("default"));
+    [Fact]
+    public void ValueExpression_PathDoesNotExist_ReturnsDefault()
+    {
+        // Arrange
+        var json = JObject.Parse("{ 'foo': 123 }");
+        var context = TemplateContext.Create(json, json);
+        var expr = new ValueExpression(context, "bar", "default");
 
-            // Act
-            var result = expr.GetValue();
+        // Act
+        var result = expr.GetValue();
 
-            // Assert
-            Assert.Equal("default", result.Value<string>());
-        }
+        // Assert
+        Assert.Equal("default", result, StringComparer.InvariantCulture);
+    }
 
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData("   ")]
-        public void ValueExpression_InvalidPath_ThrowsArgumentNullException(string path)
-        {
-            var json = JObject.Parse(@"{ 'foo': 123 }");
-            var context = TemplateContext.Create(json, json);
+    [Theory]
+    [InlineData(null, typeof(ArgumentNullException))]
+    [InlineData("", typeof(ArgumentException))]
+    [InlineData("   ", typeof(ArgumentException))]
+    public void ValueExpression_InvalidPath_ThrowsException(string path, Type exType)
+    {
+        var json = JObject.Parse("{ 'foo': 123 }");
+        var context = TemplateContext.Create(json, json);
 
-            Assert.Throws<ArgumentNullException>(() => new ValueExpression(context, path, new JValue(0)));
-        }
+        Assert.Throws(exType, () => new ValueExpression(context, path, "0"));
+    }
 
-        [Fact]
-        public void ValueExpression_NullContext_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() => new ValueExpression(null, "foo", new JValue(0)));
-        }
+    [Fact]
+    public void ValueExpression_NullContext_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => new ValueExpression(null!, "foo", "0"));
+    }
 
-        [Fact]
-        public void ValueExpression_NullDefault_ThrowsArgumentNullException()
-        {
-            var json = JObject.Parse(@"{ 'foo': 123 }");
-            var context = TemplateContext.Create(json, json);
+    [Fact]
+    public void FormatDateExpression_ValidInput_ConvertsDate()
+    {
+        // Arrange
+        var json = JObject.Parse("{ 'date': '2024-05-27' }");
+        var context = TemplateContext.Create(json, json);
+        var valueExpr = "2024-05-27";
+        var formatExpr = new FormatDateExpression(context, valueExpr, "yyyy-MM-dd", "dd/MM/yyyy");
 
-            Assert.Throws<ArgumentNullException>(() => new ValueExpression(context, "foo", null));
-        }
+        // Act
+        var result = formatExpr.GetValue();
 
-        [Fact]
-        public void FormatDateExpression_ValidInput_ConvertsDate()
-        {
-            // Arrange
-            var json = JObject.Parse(@"{ 'date': '2024-05-27' }");
-            var context = TemplateContext.Create(json, json);
-            var valueExpr = "2024-05-27";
-            var formatExpr = new FormatDateExpression(context, valueExpr, "yyyy-MM-dd", "dd/MM/yyyy");
+        // Assert
+        Assert.Equal("27/05/2024", result);
+    }
 
-            // Act
-            var result = formatExpr.GetValue();
+    [Fact]
+    public void FormatDateExpression_InvalidInputFormat_ThrowsException()
+    {
+        // Arrange
+        var json = JObject.Parse(@"{ 'date': 'not-a-date' }");
+        var context = TemplateContext.Create(json, json);
+        var valueExpr = "not-a-date";
+        var formatExpr = new FormatDateExpression(context, valueExpr, "yyyy-MM-dd", "dd/MM/yyyy");
 
-            // Assert
-            Assert.Equal("27/05/2024", result.Value<string>());
-        }
+        // Act & Assert
+        Assert.Throws<Exception>(() => formatExpr.GetValue());
+    }
 
-        [Fact]
-        public void FormatDateExpression_InvalidInputFormat_ThrowsException()
-        {
-            // Arrange
-            var json = JObject.Parse(@"{ 'date': 'not-a-date' }");
-            var context = TemplateContext.Create(json, json);
-            var valueExpr = "not-a-date";
-            var formatExpr = new FormatDateExpression(context, valueExpr, "yyyy-MM-dd", "dd/MM/yyyy");
+    [Fact]
+    public void FormatDateExpression_NullContext_ThrowsArgumentNullException()
+    {
+        var valueExpr = "2024-05-27";
+        Assert.Throws<ArgumentNullException>(() => new FormatDateExpression(null!, valueExpr, "yyyy-MM-dd", "dd/MM/yyyy"));
+    }
 
-            // Act & Assert
-            Assert.Throws<Exception>(() => formatExpr.GetValue());
-        }
+    [Theory]
+    [InlineData(null, typeof(ArgumentNullException))]
+    [InlineData("", typeof(ArgumentException))]
+    [InlineData("   ", typeof(ArgumentException))]
+    public void FormatDateExpression_InvalidOriginalFormat_ThrowsException(string originalFormat, Type exType)
+    {
+        var valueExpr = "2024-05-27";
+        var json = JObject.Parse("{ }");
+        var context = TemplateContext.Create(json, json);
 
-        [Fact]
-        public void FormatDateExpression_NullContext_ThrowsArgumentNullException()
-        {
-            var valueExpr = "2024-05-27";
-            Assert.Throws<ArgumentNullException>(() => new FormatDateExpression(null, valueExpr, "yyyy-MM-dd", "dd/MM/yyyy"));
-        }
+        Assert.Throws(exType, () => new FormatDateExpression(context, valueExpr, originalFormat, "dd/MM/yyyy"));
+    }
 
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData("   ")]
-        public void FormatDateExpression_InvalidOriginalFormat_ThrowsArgumentNullException(string originalFormat)
-        {
-            var valueExpr = "2024-05-27";
-            var json = JObject.Parse(@"{ }");
-            var context = TemplateContext.Create(json, json);
+    [Fact]
+    public void FormatDateExpression_NullExpression_ThrowsArgumentNullException()
+    {
+        var json = JObject.Parse(@"{ }");
+        var context = TemplateContext.Create(json, json);
 
-            Assert.Throws<ArgumentNullException>(() => new FormatDateExpression(context, valueExpr, originalFormat, "dd/MM/yyyy"));
-        }
+        Assert.Throws<ArgumentNullException>(() => new FormatDateExpression(context, null!, "yyyy-MM-dd", "dd/MM/yyyy"));
+    }
 
-        [Fact]
-        public void FormatDateExpression_NullExpression_ThrowsArgumentNullException()
-        {
-            var json = JObject.Parse(@"{ }");
-            var context = TemplateContext.Create(json, json);
+    // SwitchExpression unit tests
+    [Fact]
+    public void SwitchExpression_InputMatchesNumberMapping_ReturnsNumberValue()
+    {
+        // Arrange
+        var context = TemplateContext.Create(JObject.Parse("{}"), JObject.Parse("{}"));
+        const string mapping = """
+                               {
+                                 "one": "1",
+                                 "two": "second"
+                               }
+                               """;
 
-            Assert.Throws<ArgumentNullException>(() => new FormatDateExpression(context, null, "yyyy-MM-dd", "dd/MM/yyyy"));
-        }
+        var expr = new SwitchExpression(context, "one", mapping, "default");
 
-        // SwitchExpression unit tests
-        [Fact]
-        public void SwitchExpression_InputMatchesNumberMapping_ReturnsNumberValue()
-        {
-            // Arrange
-            var context = TemplateContext.Create(JObject.Parse("{}"), JObject.Parse("{}"));
-            var mapping = new Dictionary<string, JValue>
-            {
-                { "one", new JValue(1) },
-                { "two", new JValue("second") }
-            };
+        // Act
+        var result = expr.GetValue();
 
-            var expr = new SwitchExpression(context, "one", mapping, "default");
+        // Assert
+        Assert.Equal("1", result);
+    }
 
-            // Act
-            var result = expr.GetValue();
+    [Fact]
+    public void SwitchExpression_InputMatchesStringMapping_ReturnsStringValue()
+    {
+        // Arrange
+        var context = TemplateContext.Create(JObject.Parse("{}"), JObject.Parse("{}"));
+        const string mapping = """
+                               {
+                                 "one": "1",
+                                 "two": "second"
+                               }
+                               """;
+        var expr = new SwitchExpression(context, "two", mapping, "default");
 
-            // Assert
-            Assert.Equal(1, result.Value<int>());
-        }
+        // Act
+        var result = expr.GetValue();
 
-        [Fact]
-        public void SwitchExpression_InputMatchesStringMapping_ReturnsStringValue()
-        {
-            // Arrange
-            var context = TemplateContext.Create(JObject.Parse("{}"), JObject.Parse("{}"));
-            var mapping = new Dictionary<string, JValue>
-            {
-                { "one", new JValue(1) },
-                { "two", new JValue("second") }
-            };
+        // Assert
+        Assert.Equal("second", result);
+    }
 
-            var expr = new SwitchExpression(context, "two", mapping, "default");
+    [Fact]
+    public void SwitchExpression_KeyNotFound_ReturnsDefault()
+    {
+        // Arrange
+        var context = TemplateContext.Create(JObject.Parse("{}"), JObject.Parse("{}"));
+        const string mapping = """
+                               {
+                                 "one": "1"
+                               }
+                               """;
 
-            // Act
-            var result = expr.GetValue();
+        var expr = new SwitchExpression(context, "missing", mapping, "my-default");
 
-            // Assert
-            Assert.Equal("second", result.Value<string>());
-        }
+        // Act
+        var result = expr.GetValue();
 
-        [Fact]
-        public void SwitchExpression_KeyNotFound_ReturnsDefault()
-        {
-            // Arrange
-            var context = TemplateContext.Create(JObject.Parse("{}"), JObject.Parse("{}"));
-            var mapping = new Dictionary<string, JValue>
-            {
-                { "one", new JValue(1) }
-            };
+        // Assert
+        Assert.Equal("my-default", result);
+    }
 
-            var expr = new SwitchExpression(context, "missing", mapping, "my-default");
+    [Fact]
+    public void SwitchExpression_NullInput_ThrowsArgumentNullException()
+    {
+        var context = TemplateContext.Create(JObject.Parse("{}"), JObject.Parse("{}"));
+        const string mapping = """
+                               {
+                                 "one": "1"
+                               }
+                               """;
+        Assert.Throws<ArgumentNullException>(() => new SwitchExpression(context, null!, mapping, "default"));
+    }
 
-            // Act
-            var result = expr.GetValue();
+    [Fact]
+    public void SwitchExpression_NullMapping_ThrowsArgumentNullException()
+    {
+        var context = TemplateContext.Create(JObject.Parse("{}"), JObject.Parse("{}"));
 
-            // Assert
-            Assert.Equal("my-default", result.Value<string>());
-        }
+        Assert.Throws<ArgumentNullException>(() => new SwitchExpression(context, "one", null!, "default"));
+    }
 
-        [Fact]
-        public void SwitchExpression_NullInput_ThrowsArgumentNullException()
-        {
-            var context = TemplateContext.Create(JObject.Parse("{}"), JObject.Parse("{}"));
-            var mapping = new Dictionary<string, JValue> { { "one", new JValue(1) } };
+    [Theory]
+    // Single-line conditions
+    [InlineData("2 > 1", true)]
+    [InlineData("\"my string\" is null", false)]
+    [InlineData("string.IsNullOrWhiteSpace(\"my string\")", false)]
+    [InlineData("string.IsNullOrWhiteSpace(\" \")", true)]
+    // Multi-line conditions
+    [InlineData("var name = \"foo\"; return string.Equals(name, \"bar\");", false)]
+    [InlineData("var name = \"foo\"; return string.Equals(name, \"foo\");", true)]
+    [InlineData("var number1 = 16; var number2 = 2; return number1%number2 == 0;", true)]
+    public async Task IfElseExpression_ConditionEvaluated_ReturnsExpectedValue(string condition, bool conditionEvaluation)
+    {
+        // Arrange
+        const string ifValue = "if value";
+        const string elseValue = "else value";
+        var context = TemplateContext.Create(JObject.Parse("{}"), JObject.Parse("{}"));
+        var expr = new IfElseExpression(context, condition, ifValue, elseValue);
 
-            Assert.Throws<ArgumentNullException>(() => new SwitchExpression(context, null!, mapping, "default"));
-        }
+        // Act
+        var result = await expr.GetValueAsync();
 
-        [Fact]
-        public void SwitchExpression_NullMapping_ThrowsArgumentNullException()
-        {
-            var context = TemplateContext.Create(JObject.Parse("{}"), JObject.Parse("{}"));
-
-            Assert.Throws<ArgumentNullException>(() => new SwitchExpression(context, "one", null!, "default"));
-        }
-
-        [Fact]
-        public void SwitchExpression_NullDefault_ThrowsArgumentNullException()
-        {
-            var context = TemplateContext.Create(JObject.Parse("{}"), JObject.Parse("{}"));
-            var mapping = new Dictionary<string, JValue> { { "one", new JValue(1) } };
-
-            Assert.Throws<ArgumentNullException>(() => new SwitchExpression(context, "one", mapping, null!));
-        }
-
-        [Theory]
-        // Single-line conditions
-        [InlineData("2 > 1", true)]
-        [InlineData("\"my string\" is null", false)]
-        [InlineData("string.IsNullOrWhiteSpace(\"my string\")", false)]
-        [InlineData("string.IsNullOrWhiteSpace(\" \")", true)]
-        // Multi-line conditions
-        [InlineData("var name = \"foo\"; return string.Equals(name, \"bar\");", false)]
-        [InlineData("var name = \"foo\"; return string.Equals(name, \"foo\");", true)]
-        [InlineData("var number1 = 16; var number2 = 2; return number1%number2 == 0;", true)]
-        public async Task IfElseExpression_ConditionEvaluated_ReturnsExpectedValue(string condition, bool conditionEvaluation)
-        {
-            // Arrange
-            const string ifValue = "if value";
-            const string elseValue = "else value";
-            var context = TemplateContext.Create(JObject.Parse("{}"), JObject.Parse("{}"));
-            var expr = new IfElseExpression(context, condition, ifValue, elseValue);
-
-            // Act
-            var result = await expr.GetValueAsync();
-
-            // Assert
-            Assert.Equal(conditionEvaluation ? ifValue : elseValue, result.Value<string>());
-        }
+        // Assert
+        Assert.Equal(conditionEvaluation ? ifValue : elseValue, result);
     }
 }
