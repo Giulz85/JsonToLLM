@@ -68,9 +68,9 @@ public class ExpressionHelper
                 break;
 
             // Parse string literal
-            if (input[index] == '"')
+            if (input[index] == '"' || input[index] == '\'')
             {
-                arguments.Add(ParseQuotedString(input, ref index, escapeChar));
+                arguments.Add(ParseQuotedString(input, ref index, escapeChar, input[index]));
                 continue;
             }
 
@@ -94,7 +94,7 @@ public class ExpressionHelper
         return arguments.Count == 0 ? null : arguments.ToArray();
     }
 
-    private static string ParseQuotedString(string input, ref int index, char escapeChar)
+    private static string ParseQuotedString(string input, ref int index, char escapeChar, char closingQuot)
     {
         var sb = new StringBuilder();
         index++; // skip opening quote
@@ -117,7 +117,7 @@ public class ExpressionHelper
                     _ => next
                 });
             }
-            else if (c == '"')
+            else if (c == closingQuot)
                 break;
             
             else

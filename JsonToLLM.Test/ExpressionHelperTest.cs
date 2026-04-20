@@ -31,9 +31,9 @@ public class ExpressionHelperTest
     }
 
     [Theory]
-    [InlineData("\"a\", \"b\", \"c\"", '\\', new[] { "a", "b", "c" })]
+    [InlineData("'a', 'b', 'c'", '\\', new[] { "a", "b", "c" })]
     [InlineData("\"a\", \"b\",3", '\\', new[] { "a", "b", "3" })]
-    [InlineData("\"a\", \"literal \\\"string\\\"\", 3", '\\', new[] { "a", "literal \"string\"", "3" })]
+    [InlineData("\"a\", 'literal \"string\"', 3", '\\', new[] { "a", "literal \"string\"", "3" })]
     [InlineData(" ", '\\', null)]
     public void SplitArguments_WorksAsExpected(string input, char escapeChar, string[]? expected)
     {
