@@ -17,7 +17,7 @@
     "@operator": "each",
     "@path": "students",
     "@element": {
-      "result": "Student {{ @value(\"name\") }} {{ @value(\"surname\") }} has following mail {{ @value(\"email\") }}"
+      "result": "Student {{ @value('name') }} {{ @value('surname') }} has following mail {{ @value('email') }}"
     }
   }
 }
