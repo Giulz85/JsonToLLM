@@ -1,89 +1,205 @@
-﻿using JsonToLLM.Extensions;
-using JsonToLLM.Helpers;
-using JsonToLLM.Model;
+﻿using JsonToLLM.Model;
 using Newtonsoft.Json.Linq;
+using System.Text;
 
-namespace JsonToLLM
+namespace JsonToLLM;
+
+public interface ITemplateEngine
 {
-    public interface ITemplateEngine
+    JToken Transform(JToken template, TemplateContext context, ExpressionParserVersion parserVersion);
+}
+
+public class TemplateEngine : ITemplateEngine
+{
+    private readonly IExpressionEngine _expressionEngine;
+    private readonly IFactoryOperator _factoryOperator;
+    /// <summary>
+    /// Delimiters used for script parsing
+    /// </summary>
+    public ScriptingDelimiters ScriptingDelimiters { get; set; } = ScriptingDelimiters.Default;
+
+    public TemplateEngine(IExpressionEngine expressionTransformer, IFactoryOperator factoryOperator)
     {
-        JToken Transform(JToken template, TemplateContext context);
+        _expressionEngine = expressionTransformer ?? throw new ArgumentNullException(nameof(expressionTransformer));
+        _factoryOperator = factoryOperator ?? throw new ArgumentNullException(nameof(factoryOperator));
     }
 
-    public class TemplateEngine : ITemplateEngine
+    public JToken Transform(JToken token, TemplateContext context,
+        ExpressionParserVersion parserVersion = ExpressionParserVersion.Version1)
     {
-        private IExpressionEngine _expressionEngine;
-        private IFactoryOperator _factoryOperator;
+        ArgumentNullException.ThrowIfNull(token);
+        ArgumentNullException.ThrowIfNull(context);
 
-        public TemplateEngine(IExpressionEngine expressionTrasformer, IFactoryOperator factoryOperator)
+        var resultToken = token;
+
+        if (token.Type is JTokenType.String)
         {
-            _expressionEngine = expressionTrasformer ?? throw new ArgumentNullException(nameof(expressionTrasformer));
-            _factoryOperator = factoryOperator ?? throw new ArgumentNullException(nameof(factoryOperator));
+            var stringTemplate = token.ToString();
+            var strResult = Transform(stringTemplate, context, parserVersion);
 
+            resultToken = new JValue(strResult);
         }
-
-        public JToken Transform(JToken token, TemplateContext context)
+        else if (token.Type is JTokenType.Object)
         {
-            if (token == null || context == null)
+            var objectTemplate = (JObject)token;
+            if (objectTemplate.TryGetValue("@operator", out var @operator))
             {
-                throw new ArgumentNullException("Token or context cannot be null.");
-            }
+                var operatorName = @operator.Type == JTokenType.String
+                    ? @operator.ToString()
+                    : throw new InvalidOperationException($"Operator property must has string value, path: '{@operator.Path}'");
 
-            JToken newToken = token;
-
-            if (_expressionEngine.IsExpression(token))
-            {
-                newToken = _expressionEngine.Evaluate(token, context);
-            }
-            else if (token.TryToGetSpecificValue<string>("@operator", out var @operator) && @operator != null)
-            {
-                //Factory to create the operator component and check if it is a valid operator 
-                var operatorTemplate = _factoryOperator.CreateOperator(@operator, token);
+                // Factory to create the operator component and check if it is a valid operator 
+                var operatorTemplate = _factoryOperator.CreateOperator(operatorName, objectTemplate);
 
                 var result = operatorTemplate.Evaluate(context);
 
                 // Operator can change context. New context can have node and expression to resolve.
                 if (result.TemplateContext != null)
                 {
-                    var resolvedContext = Transform(result.TemplateContext.LocalContext, context);
+                    var resolvedContext = Transform(result.TemplateContext.LocalContext, context, parserVersion);
                     context = TemplateContext.Create(context.GlobalContext, resolvedContext);
                 }
 
-                newToken = Transform(result.Json, context);
+                resultToken = Transform(result.Json, context, parserVersion);
             }
             // Temporary node to update a node with a specific context  
-            else if (token.TryToGetSpecificValue<string>("@type", out var @type) && @type == "context")
+            else if (objectTemplate.TryGetValue("@type", out var typeNode))
             {
-                var contextNode = token.ToObject<ContextElement>();
+                var typeNodeStr = typeNode.Type == JTokenType.String
+                    ? typeNode.ToString()
+                    : throw new InvalidOperationException($"Operator property must has string value, path: '{typeNode.Path}'");
+
+                if (!string.Equals(typeNodeStr, "context"))
+                    throw new InvalidOperationException($"Unsupported type-operator '{typeNodeStr}', path: '{typeNode.Path}'");
+
+                var contextNode = objectTemplate.ToObject<ContextElement>() ??
+                                  throw new InvalidOperationException("Can't create ContextElement for the provided type-operator.");
 
                 // In context can be inserted operator and expression to resolve.
-                var resolvedContext = Transform(contextNode.Context, context);
+                var resolvedContext = Transform(contextNode.Context, context, parserVersion);
 
-                TemplateContext contextFromElem = TemplateContext.Create(context.GlobalContext, resolvedContext);
-                newToken = Transform(contextNode.Element, contextFromElem);
+                var contextFromElem = TemplateContext.Create(context.GlobalContext, resolvedContext);
+
+                resultToken = Transform(contextNode.Element, contextFromElem, parserVersion);
             }
-            else if (token.Type == JTokenType.Object)
+            else
             {
-                foreach (var child in token.Children<JProperty>())
+                foreach (var child in objectTemplate.Children<JProperty>())
                 {
-                    var newValue = Transform(child.Value, context);
+                    var newValue = Transform(child.Value, context, parserVersion);
                     child.Value = newValue; // Replace the child value with the transformed value
                 }
-                newToken = token; // Return the modified object
-            }
-            else if (token.Type == JTokenType.Array)
-            {
-                var array = (JArray)token;
-                for (var i = 0; i < array.Count; i++)
-                {
-                    var elem = array[i];
-                    TemplateContext contextElem = new TemplateContext(context.GlobalContext, elem);
 
-                    array[i] = Transform(elem, contextElem);
-                }
-                newToken = array; // Return the modified array
+                resultToken = objectTemplate; // Return the modified object
             }
-            return newToken; // Return the token as is if no transformation is needed
         }
+        else if (token.Type is JTokenType.Array)
+        {
+            var arrayTemplate = (JArray)token;
+            for (var i = 0; i < arrayTemplate.Count; i++)
+            {
+                var elem = arrayTemplate[i];
+                var contextElem = new TemplateContext(context.GlobalContext, elem);
+
+                arrayTemplate[i] = Transform(elem, contextElem, parserVersion);
+            }
+
+            resultToken = arrayTemplate; // Return the modified array
+        }
+
+        return resultToken; // Return the token as is if no transformation is needed
+    }
+
+    public string Transform(string template, TemplateContext context,
+        ExpressionParserVersion parserVersion = ExpressionParserVersion.Version1) 
+        => TransformStringTemplate(template, context, parserVersion);
+
+    private string TransformStringTemplate(string template, TemplateContext context, ExpressionParserVersion parserVersion)
+    {
+        return parserVersion switch
+        {
+            ExpressionParserVersion.Version1 => TransformStringTemplateV1(template, context),
+            ExpressionParserVersion.Version2 => TransformStringTemplateV2(template, context), 
+            _ => throw new ArgumentOutOfRangeException(nameof(parserVersion)),
+        };
+    }
+
+    private string TransformStringTemplateV1(string template, TemplateContext context) 
+        => _expressionEngine.Evaluate(template, context, ExpressionParserVersion.Version1);
+
+    private string TransformStringTemplateV2(string template, TemplateContext context)
+    {
+        if (string.IsNullOrEmpty(template))
+            return template;
+
+        var atStart = template.IndexOf(ScriptingDelimiters.StartDelimiter, StringComparison.OrdinalIgnoreCase);
+        // No expressions in the template
+        if (atStart < 0)
+            return template;
+
+        var result = new StringBuilder();
+        do
+        {
+            var atEnd = template.IndexOf(ScriptingDelimiters.EndDelimiter, StringComparison.Ordinal);
+            // No end delimiter
+            if (atEnd < 0)
+            {
+                result.Append(template);
+                break;
+            }
+            if (atEnd < atStart)
+                throw new InvalidOperationException($"Scripting Error: {ScriptingDelimiters.EndDelimiter} delimiter nesting error.");
+
+            // Take text up to the expression
+            result.Append(template.AsSpan(0, atStart));
+
+            var expression = template
+                .Substring(atStart + ScriptingDelimiters.StartDelimiter.Length, atEnd - atStart - ScriptingDelimiters.EndDelimiter.Length)
+                .Trim();
+
+            // Evaluate extracted expression
+            var expEngineResult = _expressionEngine.Evaluate(expression, context, ExpressionParserVersion.Version2);
+
+            result.Append(expEngineResult);
+
+            // Text that is left 
+            template = template[(atEnd + ScriptingDelimiters.EndDelimiter.Length)..];
+
+            // Look for the next expression
+            atStart = template.IndexOf(ScriptingDelimiters.StartDelimiter, StringComparison.Ordinal);
+            if (atStart < 0)
+                // Append remaining literal text
+                result.Append(template);
+
+        } while (atStart > -1);
+
+        return result.ToString();
     }
 }
+
+/// <summary>
+/// Class that encapsulates the delimiters used for script parsing
+/// </summary>
+public class ScriptingDelimiters
+{
+    /// <summary>
+    /// Start delimiter for expressions
+    /// </summary>
+    public string StartDelimiter { get; set; } = "{{";
+
+    /// <summary>
+    /// End delimiter for expressions
+    /// </summary>
+    public string EndDelimiter { get; set; } = "}}";
+
+    /// <summary>
+    /// A default instance of the delimiters
+    /// </summary>
+    public static ScriptingDelimiters Default { get; } = new();
+}
+
+public enum ExpressionParserVersion
+{
+    Version1,
+    Version2
+} 

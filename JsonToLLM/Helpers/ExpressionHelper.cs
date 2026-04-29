@@ -1,145 +1,242 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Text;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
-namespace JsonToLLM.Helpers
+namespace JsonToLLM.Helpers;
+
+/// <summary>
+/// Provides helper methods for parsing and handling function-like expressions,
+/// including extracting function names and arguments, splitting arguments with escape support,
+/// and unescaping special characters.
+/// </summary>
+public class ExpressionHelper
 {
-
+    /// <summary>
+    /// Regular expression used to match a function name and its arguments.
+    /// </summary>
+    private const string ContainsFunctionCallRegex = @"@(\w+)\s*\(((?:[^()@])*)\)";
+    private const string ExactFunctionCallRegex = @"^@(\w+)\s*\((.*)\)$";
+    private const string FunctionAndArgumentsRegex = @"@(\w+)\s*\(\s*((?:`[^`]*`|[^`()@])*)\s*\)";
 
     /// <summary>
-    /// Provides helper methods for parsing and handling function-like expressions,
-    /// including extracting function names and arguments, splitting arguments with escape support,
-    /// and unescaping special characters.
+    /// Attempts to parse the function name and arguments from the input string.
     /// </summary>
-    public class ExpressionHelper
+    /// <param name="input">The input string to parse.</param>
+    /// <param name="functionName">The parsed function name, or the input if parsing fails.</param>
+    /// <param name="arguments">The parsed arguments, or null if parsing fails.</param>
+    /// <param name="startIndex"></param>
+    /// <param name="endIndex"></param>
+    /// <param name="parserVersion"></param>
+    /// <returns>True if parsing was successful; otherwise, false.</returns>
+    public static bool TryParseFunctionNameAndArguments(string input,
+        out string? functionName, out string?[]? arguments, out int? startIndex, out int? endIndex,
+        ExpressionParserVersion parserVersion = ExpressionParserVersion.Version1)
     {
-        /// <summary>
-        /// Regular expression used to match a function name and its arguments.
-        /// </summary>
-        //private const string FunctionAndArgumentsRegex = @"^\s*@(\w+)\s*\(([^)]*)\)\s*$";
-        private const string FunctionAndArgumentsRegex = @"@(\w+)\s*\(\s*((?:`[^`]*`|[^`()@])*)\s*\)";
+        (functionName, arguments, startIndex, endIndex) = (null, null, null, null);
 
-
-        /// <summary>
-        /// Attempts to parse the function name and arguments from the input string.
-        /// </summary>
-        /// <param name="input">The input string to parse.</param>
-        /// <param name="functionName">The parsed function name, or the input if parsing fails.</param>
-        /// <param name="arguments">The parsed arguments, or null if parsing fails.</param>
-        /// <returns>True if parsing was successful; otherwise, false.</returns>
-        public static bool TryParseFunctionNameAndArguments(string input, out string functionName, out string? arguments, out int? startIndex,
-            out int? endIndex)
+        var pattern = parserVersion switch
         {
-            var match = Regex.Match(input, FunctionAndArgumentsRegex, RegexOptions.Compiled);
-            functionName = match.Success ? match.Groups[1].Value : input;
-            startIndex = match.Success ? match.Groups[1].Index - 1: null; 
-            endIndex = match.Success ? match.Groups[2].Index + match.Groups[2].Length : null;
-            arguments = match.Success ? match.Groups[2].Value : null;
-            return match.Success;
-        }
+            ExpressionParserVersion.Version1 => FunctionAndArgumentsRegex,
+            ExpressionParserVersion.Version2 => ContainsFunctionCallRegex,
+            _ => throw new ArgumentOutOfRangeException(nameof(parserVersion))
+        };
 
-        /// <summary>
-        /// Splits a function argument string into individual arguments, supporting escaped characters.
-        /// </summary>
-        /// <param name="functionString">The argument string to split.</param>
-        /// <param name="escapeChar">The character used to escape special characters.</param>
-        /// <returns>An array of argument strings.</returns>
-        public static string[] SplitArguments(string functionString, char escapeChar)
-        {
-            if (string.IsNullOrEmpty(functionString))
-            {
-                return new string[0];
-            }
+        var match = Regex.Match(input, pattern, RegexOptions.Compiled);
+        if (!match.Success)
+            return false;
 
-            List<string> arguments = new List<string>();
-            int index = 0;
+        functionName = match.Groups[1].Value;
+        startIndex = match.Groups[1].Index - 1;
+        endIndex = match.Groups[2].Index + match.Groups[2].Length;
+        arguments = parserVersion is ExpressionParserVersion.Version1 ?
+            SplitArgumentsV1(match.Groups[2].Value, '\\') :
+            SplitArgumentsV2(match.Groups[2].Value, '\\');
 
-            int openBrackettCount = 0;
-            int closebrackettCount = 0;
-            bool isEscapedChar = false;
-
-            for (int i = 0; i < functionString.Length; i++)
-            {
-                char currentChar = functionString[i];
-                if (currentChar == escapeChar)
-                {
-                    isEscapedChar = !isEscapedChar;
-                    continue;
-                }
-                if (currentChar == '(')
-                {
-                    if (!isEscapedChar) { openBrackettCount++; }
-                    else { isEscapedChar = !isEscapedChar; }
-                }
-                else if (currentChar == ')')
-                {
-                    if (!isEscapedChar) { closebrackettCount++; }
-                    else { isEscapedChar = !isEscapedChar; }
-                }
-                //TODO: verify if this is correct for curly brackets
-                if (currentChar == '{')
-                {
-                    if (!isEscapedChar) { openBrackettCount++; }
-                    else { isEscapedChar = !isEscapedChar; }
-                }
-                else if (currentChar == '}')
-                {
-                    if (!isEscapedChar) { closebrackettCount++; }
-                    else { isEscapedChar = !isEscapedChar; }
-                }
-
-                bool brackettOpen = openBrackettCount != closebrackettCount;
-                if (currentChar == ',' && !brackettOpen)
-                {
-                    if (!isEscapedChar)
-                    {
-                        arguments.Add(Unescape(index != 0 ?
-                            functionString.Substring(index + 1, i - index - 1) :
-                            functionString.Substring(index, i), escapeChar));
-                        index = i;
-                    }
-                    else { isEscapedChar = !isEscapedChar; }
-                }
-                else { isEscapedChar = false; }
-            }
-
-            arguments.Add(index > 0 ?
-                Unescape(functionString.Substring(index + 1, functionString.Length - index - 1), escapeChar) :
-                Unescape(functionString, escapeChar));
-
-            return arguments.ToArray();
-        }
-
-        /// <summary>
-        /// Removes escape characters from a string, unless the string is a function.
-        /// </summary>
-        /// <param name="str">The string to unescape.</param>
-        /// <param name="escapeChar">The escape character.</param>
-        /// <returns>The unescaped string.</returns>
-        public static string Unescape(string str, char escapeChar)
-        {
-            return !IsFunction(str) ?
-                Regex.Replace(str, $"\\{escapeChar}([\\{escapeChar}(),])", "$1") :
-                str;
-        }
-
-        /// <summary>
-        /// Determines if the given string represents a function (starts with '@').
-        /// </summary>
-        /// <param name="val">The string to check.</param>
-        /// <returns>True if the string is a function; otherwise, false.</returns>
-        public static bool IsFunction(string val)
-        {
-            return Regex.IsMatch(val, FunctionAndArgumentsRegex);
-        }
-
-        /// <summary>
-        /// Removes an escape character before a sharp ('@') at the start of the string.
-        /// </summary>
-        /// <param name="val">The string to unescape.</param>
-        /// <param name="escapeChar">The escape character.</param>
-        /// <returns>The unescaped string.</returns>
-        public static string UnescapeSharp(string val, char escapeChar)
-        {
-            return Regex.Replace(val, $"^(\\s*)\\{escapeChar}(@)", "$1$2");
-        }
+        return true;
     }
+
+    /// <summary>
+    /// Splits a function argument string into individual arguments, supporting escaped characters.
+    /// </summary>
+    /// <param name="functionString">The argument string to split.</param>
+    /// <param name="escapeChar">The character used to escape special characters.</param>
+    /// <returns>An array of argument strings.</returns>
+    private static string[] SplitArgumentsV1(string functionString, char escapeChar)
+    {
+        if (string.IsNullOrEmpty(functionString))
+            return [];
+        
+        List<string> arguments = new List<string>();
+        int index = 0;
+
+        int openBrackettCount = 0;
+        int closebrackettCount = 0;
+        bool isEscapedChar = false;
+
+        for (int i = 0; i < functionString.Length; i++)
+        {
+            char currentChar = functionString[i];
+            if (currentChar == escapeChar)
+            {
+                isEscapedChar = !isEscapedChar;
+                continue;
+            }
+            if (currentChar == '(')
+            {
+                if (!isEscapedChar) { openBrackettCount++; }
+                else { isEscapedChar = !isEscapedChar; }
+            }
+            else if (currentChar == ')')
+            {
+                if (!isEscapedChar) { closebrackettCount++; }
+                else { isEscapedChar = !isEscapedChar; }
+            }
+            //TODO: verify if this is correct for curly brackets
+            if (currentChar == '{')
+            {
+                if (!isEscapedChar) { openBrackettCount++; }
+                else { isEscapedChar = !isEscapedChar; }
+            }
+            else if (currentChar == '}')
+            {
+                if (!isEscapedChar) { closebrackettCount++; }
+                else { isEscapedChar = !isEscapedChar; }
+            }
+
+            bool brackettOpen = openBrackettCount != closebrackettCount;
+            if (currentChar == ',' && !brackettOpen)
+            {
+                if (!isEscapedChar)
+                {
+                    arguments.Add(Unescape(index != 0 ?
+                        functionString.Substring(index + 1, i - index - 1) :
+                        functionString.Substring(index, i), escapeChar));
+                    index = i;
+                }
+                else { isEscapedChar = !isEscapedChar; }
+            }
+            else { isEscapedChar = false; }
+        }
+
+        arguments.Add(index > 0 ?
+            Unescape(functionString.Substring(index + 1, functionString.Length - index - 1), escapeChar) :
+            Unescape(functionString, escapeChar));
+
+        return arguments.Select(arg => IsLiteralString(arg) ? arg.Trim('`') : arg).ToArray();
+    }
+
+    /// <summary>
+    /// Splits a function argument string into individual arguments, supporting escaped characters.
+    /// </summary>
+    /// <param name="input">The argument string to split.</param>
+    /// <param name="escapeChar">The character used to escape special characters.</param>
+    /// <returns>An array of argument strings.</returns>
+    private static string?[]? SplitArgumentsV2(string input, char escapeChar)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return null;
+
+        var arguments = new List<string?>();
+        var index = 0;
+        var length = input.Length;
+
+        while (index < length)
+        {
+            // Skip whitespace and commas
+            while (index < length && (char.IsWhiteSpace(input[index]) || input[index] == ','))
+                index++;
+
+            if (index >= length)
+                break;
+
+            // Parse string literal
+            if (input[index] == '"' || input[index] == '\'')
+            {
+                arguments.Add(ParseQuotedString(input, ref index, escapeChar, input[index]));
+                continue;
+            }
+
+            // Parse unquoted token
+            var start = index;
+            while (index < length && input[index] != ',')
+                index++;
+
+            var token = input[start..index].Trim();
+
+            if (string.Equals(token, "null", StringComparison.OrdinalIgnoreCase))
+                arguments.Add(null);
+
+            else if (IsNumber(token))
+                arguments.Add(token);
+
+            else
+                throw new FormatException($"Unrecognized token '{token}'");
+        }
+
+        return arguments.Count == 0 ? null : arguments.ToArray();
+    }
+
+    private static string ParseQuotedString(string input, ref int index, char escapeChar, char closingQuot)
+    {
+        var sb = new StringBuilder();
+        index++; // skip opening quote
+
+        while (index < input.Length)
+        {
+            var c = input[index++];
+
+            if (c == escapeChar && index < input.Length)
+            {
+                // Handle common escapes: \" \\ \n \t
+                var next = input[index++];
+                sb.Append(next switch
+                {
+                    '"' => '"',
+                    '\\' => '\\',
+                    'n' => '\n',
+                    'r' => '\r',
+                    't' => '\t',
+                    _ => next
+                });
+            }
+            else if (c == closingQuot)
+                break;
+
+            else
+                sb.Append(c);
+        }
+
+        return sb.ToString();
+    }
+
+    private static bool IsNumber(string token)
+    {
+        // Try int or double
+        return int.TryParse(token, NumberStyles.Integer, CultureInfo.InvariantCulture, out _) ||
+               double.TryParse(token, NumberStyles.Float, CultureInfo.InvariantCulture, out _);
+    }
+
+    /// <summary>
+    /// Removes escape characters from a string, unless the string is a function.
+    /// </summary>
+    /// <param name="str">The string to unescape.</param>
+    /// <param name="escapeChar">The escape character.</param>
+    /// <returns>The unescaped string.</returns>
+    private static string Unescape(string str, char escapeChar)
+    {
+        return !IsExactFunctionCall(str) ?
+            Regex.Replace(str, $"\\{escapeChar}([\\{escapeChar}(),])", "$1") :
+            str;
+    }
+
+    /// <summary>
+    /// Determines if the given string represents exact function call.
+    /// </summary>
+    /// <param name="val">The string to check.</param>
+    /// <returns>True if the string is a function; otherwise, false.</returns>
+    private static bool IsExactFunctionCall(string val)
+        => Regex.IsMatch(val, ExactFunctionCallRegex);
+
+    private static bool IsLiteralString(string str)
+        => str.Length >= 2 && str[0].Equals('`') && str[^1].Equals('`');
 }
