@@ -1,12 +1,12 @@
-﻿using System.Text;
-using JsonToLLM.Model;
+﻿using JsonToLLM.Model;
 using Newtonsoft.Json.Linq;
+using System.Text;
 
 namespace JsonToLLM;
 
 public interface ITemplateEngine
 {
-    JToken Transform(JToken template, TemplateContext context);
+    JToken Transform(JToken template, TemplateContext context, ExpressionParserVersion parserVersion);
 }
 
 public class TemplateEngine : ITemplateEngine
@@ -24,7 +24,8 @@ public class TemplateEngine : ITemplateEngine
         _factoryOperator = factoryOperator ?? throw new ArgumentNullException(nameof(factoryOperator));
     }
 
-    public JToken Transform(JToken token, TemplateContext context)
+    public JToken Transform(JToken token, TemplateContext context,
+        ExpressionParserVersion parserVersion = ExpressionParserVersion.Version1)
     {
         ArgumentNullException.ThrowIfNull(token);
         ArgumentNullException.ThrowIfNull(context);
@@ -34,7 +35,7 @@ public class TemplateEngine : ITemplateEngine
         if (token.Type is JTokenType.String)
         {
             var stringTemplate = token.ToString();
-            var strResult = Transform(stringTemplate, context);
+            var strResult = Transform(stringTemplate, context, parserVersion);
 
             resultToken = new JValue(strResult);
         }
@@ -55,11 +56,11 @@ public class TemplateEngine : ITemplateEngine
                 // Operator can change context. New context can have node and expression to resolve.
                 if (result.TemplateContext != null)
                 {
-                    var resolvedContext = Transform(result.TemplateContext.LocalContext, context);
+                    var resolvedContext = Transform(result.TemplateContext.LocalContext, context, parserVersion);
                     context = TemplateContext.Create(context.GlobalContext, resolvedContext);
                 }
 
-                resultToken = Transform(result.Json, context);
+                resultToken = Transform(result.Json, context, parserVersion);
             }
             // Temporary node to update a node with a specific context  
             else if (objectTemplate.TryGetValue("@type", out var typeNode))
@@ -75,17 +76,17 @@ public class TemplateEngine : ITemplateEngine
                                   throw new InvalidOperationException("Can't create ContextElement for the provided type-operator.");
 
                 // In context can be inserted operator and expression to resolve.
-                var resolvedContext = Transform(contextNode.Context, context);
+                var resolvedContext = Transform(contextNode.Context, context, parserVersion);
 
                 var contextFromElem = TemplateContext.Create(context.GlobalContext, resolvedContext);
 
-                resultToken = Transform(contextNode.Element, contextFromElem);
+                resultToken = Transform(contextNode.Element, contextFromElem, parserVersion);
             }
             else
             {
                 foreach (var child in objectTemplate.Children<JProperty>())
                 {
-                    var newValue = Transform(child.Value, context);
+                    var newValue = Transform(child.Value, context, parserVersion);
                     child.Value = newValue; // Replace the child value with the transformed value
                 }
 
@@ -100,7 +101,7 @@ public class TemplateEngine : ITemplateEngine
                 var elem = arrayTemplate[i];
                 var contextElem = new TemplateContext(context.GlobalContext, elem);
 
-                arrayTemplate[i] = Transform(elem, contextElem);
+                arrayTemplate[i] = Transform(elem, contextElem, parserVersion);
             }
 
             resultToken = arrayTemplate; // Return the modified array
@@ -109,12 +110,26 @@ public class TemplateEngine : ITemplateEngine
         return resultToken; // Return the token as is if no transformation is needed
     }
 
-    public string Transform(string template, TemplateContext context)
-        => TransformStringTemplate(template, context);
+    public string Transform(string template, TemplateContext context,
+        ExpressionParserVersion parserVersion = ExpressionParserVersion.Version1) 
+        => TransformStringTemplate(template, context, parserVersion);
 
-    private string TransformStringTemplate(string template, TemplateContext context)
+    private string TransformStringTemplate(string template, TemplateContext context, ExpressionParserVersion parserVersion)
     {
-        if (string.IsNullOrEmpty(template)) 
+        return parserVersion switch
+        {
+            ExpressionParserVersion.Version1 => TransformStringTemplateV1(template, context),
+            ExpressionParserVersion.Version2 => TransformStringTemplateV2(template, context), 
+            _ => throw new ArgumentOutOfRangeException(nameof(parserVersion)),
+        };
+    }
+
+    private string TransformStringTemplateV1(string template, TemplateContext context) 
+        => _expressionEngine.Evaluate(template, context, ExpressionParserVersion.Version1);
+
+    private string TransformStringTemplateV2(string template, TemplateContext context)
+    {
+        if (string.IsNullOrEmpty(template))
             return template;
 
         var atStart = template.IndexOf(ScriptingDelimiters.StartDelimiter, StringComparison.OrdinalIgnoreCase);
@@ -141,10 +156,10 @@ public class TemplateEngine : ITemplateEngine
             var expression = template
                 .Substring(atStart + ScriptingDelimiters.StartDelimiter.Length, atEnd - atStart - ScriptingDelimiters.EndDelimiter.Length)
                 .Trim();
-            
+
             // Evaluate extracted expression
-            var expEngineResult = _expressionEngine.Evaluate(expression, context);
-           
+            var expEngineResult = _expressionEngine.Evaluate(expression, context, ExpressionParserVersion.Version2);
+
             result.Append(expEngineResult);
 
             // Text that is left 
@@ -155,7 +170,7 @@ public class TemplateEngine : ITemplateEngine
             if (atStart < 0)
                 // Append remaining literal text
                 result.Append(template);
-            
+
         } while (atStart > -1);
 
         return result.ToString();
@@ -182,3 +197,9 @@ public class ScriptingDelimiters
     /// </summary>
     public static ScriptingDelimiters Default { get; } = new();
 }
+
+public enum ExpressionParserVersion
+{
+    Version1,
+    Version2
+} 

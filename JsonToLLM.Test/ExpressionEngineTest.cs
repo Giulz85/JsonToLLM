@@ -32,7 +32,8 @@ namespace JsonToLLM.Test
             var ctx = TemplateContext.Create(new JObject(), new JObject());
 
             // Act & Assert
-            Assert.Throws(exType, () => _engine.Evaluate(expr!, ctx));
+            Assert.Throws(exType, () => _engine.Evaluate(expr, ctx, ExpressionParserVersion.Version1));
+            Assert.Throws(exType, () => _engine.Evaluate(expr, ctx, ExpressionParserVersion.Version2));
         }
 
         [Fact]
@@ -41,7 +42,8 @@ namespace JsonToLLM.Test
             // Arrange
            
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => _engine.Evaluate("@fn()", null!));
+            Assert.Throws<ArgumentNullException>(() => _engine.Evaluate("@fn()", null!, ExpressionParserVersion.Version1));
+            Assert.Throws<ArgumentNullException>(() => _engine.Evaluate("@fn()", null!, ExpressionParserVersion.Version2));
         }
 
         [Fact]
@@ -50,7 +52,8 @@ namespace JsonToLLM.Test
             // Arrange
             var ctx = TemplateContext.Create(new JObject(), null!);
 
-            Assert.Throws<ArgumentNullException>(() => _engine.Evaluate("@fn()", ctx));
+            Assert.Throws<ArgumentNullException>(() => _engine.Evaluate("@fn()", ctx, ExpressionParserVersion.Version1));
+            Assert.Throws<ArgumentNullException>(() => _engine.Evaluate("@fn()", ctx, ExpressionParserVersion.Version2));
         }
 
         [Fact]
@@ -59,7 +62,8 @@ namespace JsonToLLM.Test
             // Arrange
             var ctx = TemplateContext.Create(null!, new JObject());
 
-            Assert.Throws<ArgumentNullException>(() => _engine.Evaluate("@fn()", ctx));
+            Assert.Throws<ArgumentNullException>(() => _engine.Evaluate("@fn()", ctx, ExpressionParserVersion.Version1));
+            Assert.Throws<ArgumentNullException>(() => _engine.Evaluate("@fn()", ctx, ExpressionParserVersion.Version2));
         }
 
         [Fact]
@@ -69,10 +73,12 @@ namespace JsonToLLM.Test
             var ctx = TemplateContext.Create(new JObject(), new JObject());
             
             // Act
-            var result = _engine.Evaluate("@echo(\"hello\")", ctx);
+            var resultV1 = _engine.Evaluate("@echo(hello)", ctx, ExpressionParserVersion.Version1);
+            var resultV2 = _engine.Evaluate("@echo(\"hello\")", ctx, ExpressionParserVersion.Version2);
 
             // Assert
-            Assert.Equal("hello", result);
+            Assert.Equal("hello", resultV1);
+            Assert.Equal("hello", resultV2);
         }
 
         [Fact]
@@ -83,10 +89,12 @@ namespace JsonToLLM.Test
             const string input = "plain text without function";
 
             // Act
-            var result = _engine.Evaluate(input, ctx);
+            var resultV1 = _engine.Evaluate(input, ctx, ExpressionParserVersion.Version1);
+            var resultV2 = _engine.Evaluate(input, ctx, ExpressionParserVersion.Version2);
 
             // Assert
-            Assert.Equal(input, result);
+            Assert.Equal(input, resultV1);
+            Assert.Equal(input, resultV2);
         }
 
         [Fact]
@@ -97,10 +105,12 @@ namespace JsonToLLM.Test
 
             // Act
             // Provide string, number and null arguments
-            var result = _engine.Evaluate("@concat(\"hello\", 123, null)", ctx);
+            var resultV1 = _engine.Evaluate("@concat(hello,123,null)", ctx, ExpressionParserVersion.Version1);
+            var resultV2 = _engine.Evaluate("@concat(\"hello\", 123, null)", ctx, ExpressionParserVersion.Version2);
 
             // Assert
-            Assert.Equal("hello|123|null", result);
+            Assert.Equal("hello|123|null", resultV1);
+            Assert.Equal("hello|123|null", resultV2);
         }
 
         [Fact]
@@ -111,10 +121,12 @@ namespace JsonToLLM.Test
 
             // Act
             // Outer has inner as first arg; inner should be evaluated first and its result passed to outer
-            var result = _engine.Evaluate("@concat(@concat( \"Inner\", \"then\" ), \"Outer\")", ctx);
+            var resultV1 = _engine.Evaluate("@concat(@concat(Inner,then),Outer)", ctx, ExpressionParserVersion.Version1);
+            var resultV2 = _engine.Evaluate("@concat(@concat( \"Inner\", \"then\" ), \"Outer\")", ctx, ExpressionParserVersion.Version2);
 
             // Assert
-            Assert.Equal("Inner|then|Outer", result);
+            Assert.Equal("Inner|then|Outer", resultV1);
+            Assert.Equal("Inner|then|Outer", resultV2);
         }
     }
 }
